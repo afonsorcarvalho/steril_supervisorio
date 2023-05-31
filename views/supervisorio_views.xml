@@ -1,0 +1,19 @@
+
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="steril_supervisorio_supervisorio_form_view">
+            <field name="name">steril_supervisorio.supervisorio.form</field>
+            <field name="model">steril_supervisorio.supervisorio</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="campo_outro"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

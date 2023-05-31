@@ -1,0 +1,54 @@
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="steril_supervisorio_ciclos_form_view">
+            <field name="name">steril_supervisorio.ciclos.form</field>
+            <field name="model">steril_supervisorio.ciclos</field>
+            <field name="arch" type="xml">
+                <form>
+                <header>
+                    <button name="action_get_file" string="Pega arquivo" class="oe_highlight"  type="object"/>
+                     <field name="state" widget="statusbar" /> 
+                </header>
+                  
+                    <sheet>
+
+                        <div class="oe_title">
+                            <label for='name'>Ciclo</label>
+                            <h1 class="d-flex flex-row">
+                                <field name="name" required="True" style="font-size: min(4vw, 2.6rem);" class="ms-3" />
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="equipment" />
+                                <field name="supervisor" widget="many2one_avatar_employee"/>
+                                <field name="operator" widget="many2one_avatar_employee"/>
+                            </group>
+                            <group>
+                                <field name="data_inicio" />
+                                <field name="data_fim" />
+                                <field name="duration" widget="float_time" />
+                            </group>
+                            <field name="file" widget="pdf_viewer" />
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="steril_supervisorio_ciclos_tree_view">
+            <field name="name">steril_supervisorio.ciclos.tree</field>
+            <field name="model">steril_supervisorio.ciclos</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name" />
+                    <field name="equipment" />
+                    <field name="data_inicio" />
+                    <field name="data_fim" />
+                    <field name="duration" widget="float_time" />
+                    <field name="supervisor" />
+                    <field name="operator" />
+                </tree>
+            </field>
+        </record>
+    </data>
+</odoo>

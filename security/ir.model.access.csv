@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_steril_supervisorio_supervisorio_user,steril_supervisorio.steril_supervisorio.supervisorio,model_steril_supervisorio_supervisorio,base.group_user,1,1,1,1
+
+access_steril_supervisorio_ciclos_user,steril_supervisorio.steril_supervisorio.ciclos,model_steril_supervisorio_ciclos,base.group_user,1,1,1,1
+
+
