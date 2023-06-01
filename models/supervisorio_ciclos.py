@@ -12,36 +12,39 @@ class SupervisorioCiclos(models.Model):
     _name = 'steril_supervisorio.ciclos'
     _description = 'Ciclos do supervisorio'
 
-    _rec_name = 'name'
-    _order = 'name ASC'
+  
 
     name = fields.Char(
         string='Codigo',
-        required=True,
-        default=lambda self: _('New'),
-        copy=False
+        
+       
     )
+    state = fields.Selection(string='Status', selection=[('iniciado', 'Iniciado'),
+                                                         ('em_andamento', 'Em andamento'),
+                                                         ('finalizado', 'Finalizado')], 
+                                                         default='iniciado'
+                                                         )
     data_inicio =  fields.Datetime()
     data_fim =  fields.Datetime()
     duration = fields.Float("Duração", compute = "_compute_duration")
     file = fields.Binary()
     
     supervisor = fields.Many2one(
-        string='supervisor',
-        comodel_name='hr.employee',
-        ondelete='restrict',
+         string='Supervisor',
+         comodel_name='hr.employee',
+        
     )
     
     operator = fields.Many2one(
-        string='operador',
+        string='Operador',
         comodel_name='hr.employee',
-        ondelete='restrict',
+        
     )
 
     equipment = fields.Many2one(
         string='Equipamento',
-        comodel_name='eng_os.equipment',
-        ondelete='restrict',
+        comodel_name='engc.equipment'
+        
     )
 
     @api.depends('data_inicio', 'data_fim')
@@ -55,7 +58,7 @@ class SupervisorioCiclos(models.Model):
                 record.duration = duration
             else:
                 record.duration = 0.0
-                
+
     def ler_arquivo_txt(self, caminho_arquivo):
         with open(caminho_arquivo, 'r') as arquivo:
             linhas = arquivo.readlines()
@@ -70,3 +73,46 @@ class SupervisorioCiclos(models.Model):
                         'numero1': numero1,
                         'numero2': numero2,
                     })
+    def verificar_conversao_tempo(string):
+        try:
+            tempo = datetime.strptime(string, '%H:%M:%S')
+            return True
+        except ValueError:
+            return False
+        
+    def verificar_conversao_float(string):
+        try:
+            valor = float(string)
+            return isinstance(valor, float)
+        except ValueError:
+            return False
+    def concatenar_lista(lista):
+        primeiro_item = lista.pop(0)
+        restante_itens = ''.join(lista)
+        return restante_itens
+        
+    def ler_arquivo_dados(self):
+        dados = {}
+        path = "/var/lib/odoo/filestore/odoo-steriliza/ciclos/"
+        file = "TESTE_20230509_161354.txt"
+        nome_arquivo = path + file
+        with open(nome_arquivo, 'r') as arquivo:
+            linhas = arquivo.readlines()
+            print(linhas)
+
+            for linha in linhas:
+                colunas = linha.strip().split()
+                hora = colunas[0]
+                fase = colunas[1]
+                valores = [float(valor) for valor in colunas[2:]]
+
+                if hora not in dados:
+                    dados[hora] = {}
+
+                dados[hora][fase] = valores
+
+        return dados
+
+    def action_get_file(self):
+        
+        self.ler_arquivo_dados()
