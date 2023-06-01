@@ -4,7 +4,7 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DATETIME_FORMAT
-
+import re
 from odoo.exceptions import UserError, ValidationError
 
 
@@ -59,34 +59,21 @@ class SupervisorioCiclos(models.Model):
             else:
                 record.duration = 0.0
 
-    def ler_arquivo_txt(self, caminho_arquivo):
-        with open(caminho_arquivo, 'r') as arquivo:
-            linhas = arquivo.readlines()
-            for linha in linhas:
-                dados = linha.strip().split(' ')
-                if len(dados) == 3:
-                    hora = float(dados[0])
-                    numero1 = float(dados[1])
-                    numero2 = float(dados[2])
-                    self.env['meu.modelo'].create({
-                        'hora': hora,
-                        'numero1': numero1,
-                        'numero2': numero2,
-                    })
-    def verificar_conversao_tempo(string):
+   
+    def verificar_conversao_tempo(self,string):
         try:
             tempo = datetime.strptime(string, '%H:%M:%S')
             return True
         except ValueError:
             return False
         
-    def verificar_conversao_float(string):
+    def verificar_conversao_float(self,string):
         try:
             valor = float(string)
             return isinstance(valor, float)
         except ValueError:
             return False
-    def concatenar_lista(lista):
+    def concatenar_lista(self,lista):
         primeiro_item = lista.pop(0)
         restante_itens = ''.join(lista)
         return restante_itens
@@ -98,18 +85,24 @@ class SupervisorioCiclos(models.Model):
         nome_arquivo = path + file
         with open(nome_arquivo, 'r') as arquivo:
             linhas = arquivo.readlines()
-            print(linhas)
+            
 
             for linha in linhas:
-                colunas = linha.strip().split()
-                hora = colunas[0]
-                fase = colunas[1]
-                valores = [float(valor) for valor in colunas[2:]]
+                #colunas = linha.strip().split('\s+')
+                colunas = re.split('\s+', linha)
+                colunas = [valor for valor in colunas if valor]
+                print(colunas)
+                if len(colunas) > 1:
+                    if (self.verificar_conversao_tempo(colunas[0])):
+                        print(colunas)
+                        hora = colunas[0]
+                        fase = colunas[1]
+                        valores = [float(valor) for valor in colunas[2:]]
 
-                if hora not in dados:
-                    dados[hora] = {}
+                        if hora not in dados:
+                            dados[hora] = {}
 
-                dados[hora][fase] = valores
+                        dados[hora][fase] = valores
 
         return dados
 
