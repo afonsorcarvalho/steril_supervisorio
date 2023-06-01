@@ -15,7 +15,7 @@ class SupervisorioCiclos(models.Model):
   
 
     name = fields.Char(
-        string='Codigo',
+        string='Codigo Ciclo',
         
        
     )
