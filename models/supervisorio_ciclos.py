@@ -1,6 +1,6 @@
 
 from odoo import models, fields, api, _
-from datetime import date, datetime
+from datetime import date, datetime,timedelta
 from dateutil.relativedelta import relativedelta
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DATETIME_FORMAT
@@ -78,10 +78,11 @@ class SupervisorioCiclos(models.Model):
         restante_itens = ''.join(lista)
         return restante_itens
         
-    def ler_arquivo_dados(self):
-        dados = {}
-        path = "/var/lib/odoo/filestore/odoo-steriliza/ciclos/"
-        file = "TESTE_20230509_161354.txt"
+    def ler_arquivo_dados(self,file):
+        dados = []
+        segmentos = []
+        path = "/var/lib/odoo/filestore/odoo-steriliza/ciclos/ETO03/4354/"
+       # file = "TESTE_20230509_161354.txt"
         nome_arquivo = path + file
         with open(nome_arquivo, 'r') as arquivo:
             linhas = arquivo.readlines()
@@ -94,18 +95,85 @@ class SupervisorioCiclos(models.Model):
                 print(colunas)
                 if len(colunas) > 1:
                     if (self.verificar_conversao_tempo(colunas[0])):
-                        print(colunas)
-                        hora = colunas[0]
-                        fase = colunas[1]
-                        valores = [float(valor) for valor in colunas[2:]]
+                        if(self.verificar_conversao_float(colunas[1])):
+                            dados.append(colunas)
+                        else:
+                            dados.append([colunas[0],' '.join(colunas[1:])])
+                            segmentos.append([colunas[0],' '.join(colunas[1:])])
 
-                        if hora not in dados:
-                            dados[hora] = {}
+        return [dados,segmentos]
+    
+    def calcular_diferenca_tempo(self,lista):
+        diferenca_tempo = []
+        for i in range(1, len(lista)):
+            hora1 = datetime.strptime(lista[i-1][0], '%H:%M:%S')
+            hora2 = datetime.strptime(lista[i][0], '%H:%M:%S')
+            diferenca = hora2 - hora1
 
-                        dados[hora][fase] = valores
+            # Extrair horas, minutos e segundos da diferença
+            horas = diferenca.seconds // 3600
+            minutos = (diferenca.seconds // 60) % 60
+            segundos = diferenca.seconds % 60
 
-        return dados
+            diferenca_tempo.append((horas, minutos, segundos))
+        return diferenca_tempo
+    
+    def get_tempo_duracao_segmentos(self,segmentos):
+        fases = ['LEAK-TEST',
+                  'ACONDICIONAMENTO',
+                  'UMIDIFICACAO',
+                  'ESTERILIZACAO',
+                  'LAVAGEM',
+                  'AERACAO',
+                  'CICLO FINALIZADO']
+        dados_fases = []
+        for linha in segmentos:
+            if linha[1] in fases:
+                dados_fases.append(linha)
+        tempos_duracao = []
+        size_fases = len(fases)
+        print(dados_fases)
+           
+    def calcular_soma_tempo(self, diferencas_tempo):
+        soma_tempo = timedelta()  # Inicializa a soma como zero
 
+        for diferenca in diferencas_tempo:
+            horas, minutos, segundos = diferenca
+            delta = timedelta(hours=horas, minutes=minutos, seconds=segundos)
+            soma_tempo += delta
+        # Extrair horas, minutos e segundos da soma total
+        horas_soma = soma_tempo.seconds // 3600
+        minutos_soma = (soma_tempo.seconds // 60) % 60
+        segundos_soma = soma_tempo.seconds % 60
+        return (horas_soma, minutos_soma, segundos_soma)
+
+            
+            
+                
     def action_get_file(self):
-        
-        self.ler_arquivo_dados()
+        fases = ['LEAK-TEST',
+                  'ACONDICIONAMENTO',
+                  'UMIDIFICACAO',
+                  'ESTERILIZACAO',
+                  'LAVAGEM',
+                  'AERACAO',
+                  'CICLO FINALIZADO']
+        file = "4354_20230531_210206.txt"
+        #lendo arquivo com os dados do ciclo
+        result = self.ler_arquivo_dados(file)
+
+        #filtrando apenas as fases
+        segmentos_filtered = [x for x in result[1] if x[1] in fases]
+        print(segmentos_filtered)
+
+        #calculando os tempos de cada fase
+        tempos  = self.calcular_diferenca_tempo(segmentos_filtered)
+
+        #mostrando resultados
+        for tempo in tempos:
+            index = tempos.index(tempo)
+            h,m,s = tempo
+            print(f"{fases[index]}: {h}h {m}m {s}s")
+        soma_total = self.calcular_soma_tempo(tempos)
+        h,m,s = soma_total
+        print(f"TOTAL: {h}h {m}m {s}s")
