@@ -11,6 +11,7 @@ import os
 class SupervisorioCiclos(models.Model):
     _name = 'steril_supervisorio.ciclos'
     _description = 'Ciclos do supervisorio'
+    _order = 'data_inicio desc'
 
   
 
@@ -81,7 +82,7 @@ class SupervisorioCiclos(models.Model):
     def ler_diretorio_ciclos(self):
         ciclos = self.env['steril_supervisorio.ciclos']
         diretorio = "/var/lib/odoo/filestore/odoo-steriliza/ciclos/ETO03/"
-        time_parametro_sistema = datetime.strptime(self.env['ir.config_parameter'].get_param('steril_supervisorio_ultima_atualizacao'), '%Y-%m-%d %H:%M:%S')
+        time_parametro_sistema = datetime.strptime(self.env['ir.config_parameter'].get_param('steril_supervisorio_ultima_atualizacao'), '%Y-%m-%d %H:%M:%S').date()
         print(time_parametro_sistema)
         
         for nome_pasta in os.listdir(diretorio):
