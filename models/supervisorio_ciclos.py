@@ -6,7 +6,7 @@ from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DATETIME_FORMAT
 import re
 from odoo.exceptions import UserError, ValidationError
-
+import os
 
 class SupervisorioCiclos(models.Model):
     _name = 'steril_supervisorio.ciclos'
@@ -77,7 +77,54 @@ class SupervisorioCiclos(models.Model):
         primeiro_item = lista.pop(0)
         restante_itens = ''.join(lista)
         return restante_itens
+    
+    def ler_diretorio_ciclos(self):
+        ciclos = self.env['steril_supervisorio.ciclos']
+        diretorio = "/var/lib/odoo/filestore/odoo-steriliza/ciclos/ETO03/"
+        time_parametro_sistema = datetime.strptime(self.env['ir.config_parameter'].get_param('steril_supervisorio_ultima_atualizacao'), '%Y-%m-%d %H:%M:%S')
+        print(time_parametro_sistema)
         
+        for nome_pasta in os.listdir(diretorio):
+            caminho_pasta = os.path.join(diretorio, nome_pasta)
+          
+            if os.path.isdir(caminho_pasta):
+                print(nome_pasta)
+                codigo_ciclo = nome_pasta
+
+                # Verificar se o código de ciclo já existe no modelo
+                ciclo_existente = ciclos.search([('name', '=', codigo_ciclo)])
+
+                if not ciclo_existente:
+                    # Obter a data e hora de início do ciclo a partir do nome do arquivo de texto
+                    print(os.listdir(caminho_pasta))
+                    nome_arquivo = os.listdir(caminho_pasta)
+                    print(nome_arquivo)
+
+                   
+
+                    # Comparar a data de modificação com o parâmetro do sistema
+                   
+                    arquivos_txt = [arquivo for arquivo in nome_arquivo if arquivo.endswith('txt')]
+                    print(arquivos_txt)
+                    
+                    for arquivo in arquivos_txt: 
+                                #filtrando se foi modificado recentemente
+                        timestamp_modificacao = os.path.getmtime(caminho_pasta+'/'+arquivo)
+                        data_modificacao = datetime.fromtimestamp(timestamp_modificacao).date()
+                        if data_modificacao >= time_parametro_sistema:
+                            data_hora_inicio = arquivo.split('_')[1] + ' ' + arquivo.split('_')[2].replace('.txt', '')
+                            print(data_hora_inicio)
+                            # Converter a data e hora para o formato datetime
+                            data_hora_inicio = datetime.strptime(data_hora_inicio, '%Y%m%d %H%M%S')
+                            print(data_hora_inicio)
+
+                            # Criar um novo registro para o código de ciclo
+                            novo_ciclo = ciclos.create({'name': codigo_ciclo, 'data_inicio': data_hora_inicio})
+                            print(novo_ciclo)
+                            # Outras operações que você deseja realizar para o novo ciclo
+                            # Por exemplo, ler arquivos dentro da pasta e atualizar campos do ciclo
+
+        return True    
     def ler_arquivo_dados(self,file):
         dados = []
         segmentos = []
@@ -183,3 +230,6 @@ class SupervisorioCiclos(models.Model):
         print(f"TOTAL: {h}h {m}m {s}s")
         str_dados_ciclo =str_dados_ciclo + f"<b>TOTAL</b>: {h}h {m}m {s}s<br/>"
         self.dados_ciclo = str_dados_ciclo
+
+    def action_ler_diretorio(self):
+        self.ler_diretorio_ciclos()

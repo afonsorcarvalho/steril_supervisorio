@@ -7,6 +7,7 @@
                 <form>
                 <header>
                     <button name="action_get_file" string="Pega arquivo" class="oe_highlight"  type="object"/>
+                    <button name="action_ler_diretorio" string="Ler diretorio" class="oe_highlight"  type="object"/>
                      <field name="state" widget="statusbar" /> 
                 </header>
                   
