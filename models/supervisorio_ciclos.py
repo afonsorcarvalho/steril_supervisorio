@@ -28,13 +28,13 @@ class SupervisorioCiclos(models.Model):
     data_fim =  fields.Datetime()
     duration = fields.Float("Duração", compute = "_compute_duration")
     file = fields.Binary()
-    
+    modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
     supervisor = fields.Many2one(
          string='Supervisor',
          comodel_name='hr.employee',
         
     )
-    
+    dados_ciclo = fields.Html("Dados do Ciclo")
     operator = fields.Many2one(
         string='Operador',
         comodel_name='hr.employee',
@@ -147,8 +147,11 @@ class SupervisorioCiclos(models.Model):
         segundos_soma = soma_tempo.seconds % 60
         return (horas_soma, minutos_soma, segundos_soma)
 
-            
-            
+    def converter_para_float_time(self,diferenca_tempo):
+        horas, minutos, segundos = map(int, diferenca_tempo.split(':'))
+        valor_float = horas + (minutos / 60) + (segundos / 3600)
+        return valor_float        
+                
                 
     def action_get_file(self):
         fases = ['LEAK-TEST',
@@ -159,6 +162,7 @@ class SupervisorioCiclos(models.Model):
                   'AERACAO',
                   'CICLO FINALIZADO']
         file = "4354_20230531_210206.txt"
+        str_dados_ciclo = ""
         #lendo arquivo com os dados do ciclo
         result = self.ler_arquivo_dados(file)
 
@@ -173,7 +177,9 @@ class SupervisorioCiclos(models.Model):
         for tempo in tempos:
             index = tempos.index(tempo)
             h,m,s = tempo
-            print(f"{fases[index]}: {h}h {m}m {s}s")
+            str_dados_ciclo =str_dados_ciclo + f"{fases[index]}: {h}h {m}m {s}s<br/>"
         soma_total = self.calcular_soma_tempo(tempos)
         h,m,s = soma_total
         print(f"TOTAL: {h}h {m}m {s}s")
+        str_dados_ciclo =str_dados_ciclo + f"<b>TOTAL</b>: {h}h {m}m {s}s<br/>"
+        self.dados_ciclo = str_dados_ciclo

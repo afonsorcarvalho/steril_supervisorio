@@ -29,6 +29,7 @@
                                 <field name="data_fim" />
                                 <field name="duration" widget="float_time" />
                             </group>
+                            <field name="dados_ciclo" />
                             <field name="file" widget="pdf_viewer" />
                         </group>
                     </sheet>
