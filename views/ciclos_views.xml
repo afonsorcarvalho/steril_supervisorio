@@ -55,7 +55,7 @@
                             options="{'post_refresh': 'recipients', 'open_attachments': True}" />
                     </div>
                 </form>
-            </field>
+            </field> 
         </record>
         <record model="ir.ui.view" id="steril_supervisorio_ciclos_search_view">
             <field name="name">steril_supervisorio.ciclos.search</field>
