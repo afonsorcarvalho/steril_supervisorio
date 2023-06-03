@@ -5,55 +5,109 @@
             <field name="model">steril_supervisorio.ciclos</field>
             <field name="arch" type="xml">
                 <form>
-                <header>
-                    <button name="action_get_file" string="Pega arquivo" class="oe_highlight"  type="object"/>
-                    <button name="action_ler_diretorio" string="Ler diretorio" class="oe_highlight"  type="object"/>
-                     <field name="state" widget="statusbar" /> 
-                </header>
-                  
+                    <header>
+                        
+                        <button name="action_ler_diretorio" string="Ler diretorio"
+                            class="oe_highlight" type="object" groups="base.group_no_one" />
+                        <field name="state" widget="statusbar" />
+                    </header>
+
                     <sheet>
 
                         <div class="oe_title">
                             <label for='name'>Ciclo</label>
                             <h1 class="d-flex flex-row">
-                                <field name="name" required="True" style="font-size: min(4vw, 2.6rem);" class="ms-3" />
+                                <field name="name" required="True"
+                                    style="font-size: min(4vw, 2.6rem);" class="ms-3" />
                             </h1>
                         </div>
                         <group>
                             <group>
                                 <field name="equipment" />
-                                <field name="supervisor" widget="many2one_avatar_employee"/>
-                                <field name="operator" widget="many2one_avatar_employee"/>
+                                <field name="supervisor" widget="many2one_avatar_employee" />
+                                <field name="operator" widget="many2one_avatar_employee" />
                             </group>
                             <group>
                                 <field name="data_inicio" />
                                 <field name="data_fim" />
                                 <field name="duration" widget="float_time" />
                             </group>
-                            <field name="dados_ciclo" />
-                            <field name="file" widget="pdf_viewer" />
+
+
                         </group>
+                        <group string="Dados do Ciclo" col="3">
+                            <group>
+                                <field name="tempos_ciclo" string= "Duração"
+                                    readonly="1"  />
+                            </group>
+                            <group>
+                                <field name="estatisticas_ciclo" string= "Estatísticas"
+                                    readonly="1"  />
+                            </group>
+
+                        </group>
+
                     </sheet>
                     <div class="oe_chatter">
+<<<<<<< HEAD
                         <field name="message_follower_ids" widget="mail_followers"/>
                         <field name="message_ids" widget="mail_thread"/>
+=======
+                        <field name="message_follower_ids" widget="mail_followers" />
+                        <field name="activity_ids" widget="mail_activity" />
+                        <field name="message_ids" widget="mail_thread"
+                            options="{'post_refresh': 'recipients', 'open_attachments': True}" />
+>>>>>>> 5c6060a084ea95c9795c343bfbce7ce3320e67fc
                     </div>
                 </form>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="steril_supervisorio_ciclos_search_view">
+            <field name="name">steril_supervisorio.ciclos.search</field>
+            <field name="model">steril_supervisorio.ciclos</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="state" string="Estado" />
+                    <field name="name"/>
+                    <field name="equipment"/>
+                    <field name="data_fim"/>
+                    <field name="supervisor"/>
+                    <field name="operator"/>
+                   
+                    <group expand="0" string="Agrupar por">
+                        
+                        <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}"/>
+                        <filter string="Supervisor" name="group_by_supervisor" context="{'group_by': 'supervisor'}"/>
+                    </group>
+                     <filter string="Data de Início" name="filter_date_range" context="{'group_by': 'data_inicio'}"/>
+                   
+                </search>
             </field>
         </record>
         <record model="ir.ui.view" id="steril_supervisorio_ciclos_tree_view">
             <field name="name">steril_supervisorio.ciclos.tree</field>
             <field name="model">steril_supervisorio.ciclos</field>
             <field name="arch" type="xml">
-                <tree>
-                    <field name="state" />
+                <tree
+                    decoration-muted="state == 'incompleto'"
+                    decoration-success="state == 'finalizado'"
+                    decoration-info="state == 'iniciado'"
+                    decoration-danger="state == 'em_andamento'"
+                >
+                    <field name="state"  widget="badge" 
+                        decoration-muted="state == 'incompleto'"
+                        decoration-success="state == 'finalizado'"
+                        decoration-info="state == 'iniciado'"
+                        decoration-danger="state == 'em_andamento'" />
                     <field name="name" />
                     <field name="equipment" />
                     <field name="data_inicio" />
-                    <field name="data_fim" />
+                    <field name="data_fim" /> 
                     <field name="duration" widget="float_time" />
-                    <field name="supervisor" />
-                    <field name="operator" />
+                    <field name="supervisor"  widget="badge" 
+                       
+                    />
+                    <field name="operator"  widget="badge" />
                 </tree>
             </field>
         </record>
