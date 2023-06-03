@@ -60,7 +60,7 @@
 >>>>>>> 5c6060a084ea95c9795c343bfbce7ce3320e67fc
                     </div>
                 </form>
-            </field>
+            </field> 
         </record>
         <record model="ir.ui.view" id="steril_supervisorio_ciclos_search_view">
             <field name="name">steril_supervisorio.ciclos.search</field>
