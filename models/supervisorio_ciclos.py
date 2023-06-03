@@ -1,5 +1,6 @@
 
 from odoo import models, fields, api, _
+import base64
 from datetime import date, datetime,timedelta
 from dateutil.relativedelta import relativedelta
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
@@ -12,13 +13,10 @@ class SupervisorioCiclos(models.Model):
     _name = 'steril_supervisorio.ciclos'
     _description = 'Ciclos do supervisorio'
     _order = 'data_inicio desc'
-
-  
+    _inherit = ['mail.thread' ]
 
     name = fields.Char(
         string='Codigo Ciclo',
-        
-       
     )
     state = fields.Selection(string='Status', selection=[('iniciado', 'Iniciado'),
                                                          ('em_andamento', 'Em andamento'),
@@ -99,6 +97,10 @@ class SupervisorioCiclos(models.Model):
                     # Obter a data e hora de início do ciclo a partir do nome do arquivo de texto
                     print(os.listdir(caminho_pasta))
                     nome_arquivo = os.listdir(caminho_pasta)
+                    
+                    
+                   
+                        
                     print(nome_arquivo)
 
                    
@@ -109,9 +111,13 @@ class SupervisorioCiclos(models.Model):
                     print(arquivos_txt)
                     
                     for arquivo in arquivos_txt: 
-                                #filtrando se foi modificado recentemente
-                        timestamp_modificacao = os.path.getmtime(caminho_pasta+'/'+arquivo)
+                        #filtrando se foi modificado recentemente
+                        path_full_file = caminho_pasta+'/'+arquivo
+
+                        
+                        timestamp_modificacao = os.path.getmtime(path_full_file)
                         data_modificacao = datetime.fromtimestamp(timestamp_modificacao).date()
+                        
                         if data_modificacao >= time_parametro_sistema:
                             data_hora_inicio = arquivo.split('_')[1] + ' ' + arquivo.split('_')[2].replace('.txt', '')
                             print(data_hora_inicio)
@@ -121,11 +127,23 @@ class SupervisorioCiclos(models.Model):
 
                             # Criar um novo registro para o código de ciclo
                             novo_ciclo = ciclos.create({'name': codigo_ciclo, 'data_inicio': data_hora_inicio})
+                           
                             print(novo_ciclo)
+                            if(novo_ciclo):
+                                print("tem novo ciclo")
+                                novo_ciclo.adicionar_anexo_do_diretorio(path_full_file)
+                              
+                                
                             # Outras operações que você deseja realizar para o novo ciclo
                             # Por exemplo, ler arquivos dentro da pasta e atualizar campos do ciclo
 
-        return True    
+        return True   
+     
+    def ler_fim_de_ciclo(self,file):
+        result = self.ler_arquivo_dados(file)
+        dado = result[0]
+
+
     def ler_arquivo_dados(self,file):
         dados = []
         segmentos = []
@@ -199,8 +217,37 @@ class SupervisorioCiclos(models.Model):
         horas, minutos, segundos = map(int, diferenca_tempo.split(':'))
         valor_float = horas + (minutos / 60) + (segundos / 3600)
         return valor_float        
-                
-                
+
+    def adicionar_anexo_do_diretorio(self,caminho_arquivo):
+        with open(caminho_arquivo, 'rb') as arquivo:
+            nome_arquivo = os.path.basename(caminho_arquivo)
+            arquivo_binario = arquivo.read()
+            arquivo_base64 = base64.b64encode(arquivo_binario)
+        # Verificar se o arquivo já está presente nos anexos
+        if self._arquivo_existente(nome_arquivo):
+            return
+
+        attachment = self.env['ir.attachment'].create({
+            'name': nome_arquivo,
+            'datas': arquivo_base64,
+            'res_model': 'meu.modelo',
+            'res_id': self.id,
+            'type': 'binary',
+        })
+        self.message_post(attachment_ids=[attachment.id])
+
+
+        # self.message_main_attachment_id = [(4, attachment.id)]           
+    def _arquivo_existente(self, nome_arquivo):
+        # Verificar se o arquivo já está presente nos anexos do modelo
+        existente = self.env['ir.attachment'].search([
+            ('name', '=', nome_arquivo),
+            
+            ('res_model', '=', 'meu.modelo'),
+            ('res_id', '=', self.id),
+        ])
+        return existente           
+    
     def action_get_file(self):
         fases = ['LEAK-TEST',
                   'ACONDICIONAMENTO',
