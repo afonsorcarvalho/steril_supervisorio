@@ -11,6 +11,11 @@
       <field name="res_model">steril_supervisorio.ciclos</field>
       <field name="view_mode">tree,form</field>
     </record>
+   <record model="ir.actions.act_window" id="steril_supervisorio.configuracao_action_window">
+      <field name="name">Ciclos</field>
+      <field name="res_model">steril_supervisorio.supervisorio</field>
+      <field name="view_mode">form</field>
+    </record>
  <!-- Top menu item -->
 
     <menuitem name="Supervisório" id="steril_supervisorio.menu_root" />
@@ -22,7 +27,8 @@
 
     <!-- actions -->
 
-    <menuitem name="Ciclos" id="steril_supervisorio.os_list_menu" parent="steril_supervisorio.ciclos_menu" action="steril_supervisorio.ciclos_action_window" />
+    <menuitem name="Ciclos" id="steril_supervisorio.ciclos_list_menu" parent="steril_supervisorio.ciclos_menu" action="steril_supervisorio.ciclos_action_window" />
+    <menuitem name="Configuração" id="steril_supervisorio.configuracao_menu" parent="steril_supervisorio.ciclos_menu" action="steril_supervisorio.configuracao_action_window" />
   
   </data>
 </odoo>

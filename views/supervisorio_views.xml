@@ -9,7 +9,7 @@
                     <sheet>
                         <group>
                             <field name="name"/>
-                            <field name="campo_outro"/>
+                            <field name="supervisor"/>
                         </group>
                     </sheet>
                 </form>

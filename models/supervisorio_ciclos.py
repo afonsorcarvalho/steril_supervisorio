@@ -39,11 +39,17 @@ class SupervisorioCiclos(models.Model):
     duration = fields.Float("Duração", compute = "_compute_duration",store=True)
     file = fields.Binary()
     modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
+    def _get_default_supervisor(self):
+        supervisor_default = self.env['ir.config_parameter'].sudo().get_param('steril_supervisorio.supervisor_ciclos')
+        print(supervisor_default)
+        return self.env['hr.employee'].search([('id','=', supervisor_default)])
+    
     supervisor = fields.Many2one(
          string='Supervisor',
          comodel_name='hr.employee',
+         default=_get_default_supervisor)
         
-    )
+    
     tempos_ciclo = fields.Html("Tempos do Ciclo")
     estatisticas_ciclo = fields.Html("Estatísticas do Ciclo")
     operator = fields.Many2one(
