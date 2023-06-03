@@ -36,7 +36,7 @@ class SupervisorioCiclos(models.Model):
                                                          )
     data_inicio =  fields.Datetime()
     data_fim =  fields.Datetime()
-    duration = fields.Float("Duração", compute = "_compute_duration")
+    duration = fields.Float("Duração", compute = "_compute_duration",store=True)
     file = fields.Binary()
     modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
     supervisor = fields.Many2one(
