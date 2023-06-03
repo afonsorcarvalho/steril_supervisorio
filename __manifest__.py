@@ -8,6 +8,7 @@
     'author': 'Afonso Carvalho',
     'depends': ['base','engc_os'],
     'data': [
+        'views/res_config_settings_views.xml',
         'views/supervisorio_menu_views.xml',
         'views/supervisorio_views.xml',
         'views/ciclos_views.xml',
