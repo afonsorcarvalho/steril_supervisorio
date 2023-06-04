@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+ <template id="report_ciclos_template">
+
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="o">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h3>Dados do Ciclo</h3>
+                     <div class="row">
+                        <div class="col-2">
+                            <strong>Ciclo: </strong>
+                        </div>
+                        <div class="col-4">
+                            <span t-field="o.name" />
+                        </div>
+                        
+                    </div>
+
+                    <div class="row">
+                        <div class="col-2">
+                            <strong>Equipamento: </strong>
+                        </div>
+                        <div class="col-6">
+                            <span t-field="o.equipment" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-2">
+                            <strong>Data início: </strong>
+                        </div>
+                        <div class="col-4">
+                            <span t-field="o.data_inicio" />
+                        </div>
+                        <div class="col-2">
+                            <strong>Data fim: </strong>
+                        </div>
+                        <div class="col-4">
+                            <span t-field="o.data_fim" />
+                        </div>
+                       
+                    </div>
+                  
+                  
+                    <br></br>
+                    <br></br>
+                    <div class="row">
+                    
+                            <h5>Duração: </h5>
+                    
+                    </div>
+                    <div class="row">
+                         
+                        <div class="col text-center" >
+                            <span t-field="o.tempos_ciclo" />
+                        </div>
+                    </div>
+                    
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+            
+</odoo>
