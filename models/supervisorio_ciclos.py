@@ -35,7 +35,7 @@ class SupervisorioCiclos(models.Model):
                                                          ], default='iniciado'
                                                          )
     data_inicio =  fields.Datetime()
-    data_fim =  fields.Datetime()
+    data_fim =  fields.Datetime(tracking=True)
     duration = fields.Float("Duração", compute = "_compute_duration",store=True)
     file = fields.Binary()
     modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
@@ -373,7 +373,7 @@ class SupervisorioCiclos(models.Model):
                   'LAVAGEM',
                   'AERACAO',
                   'CICLO FINALIZADO']
-        str_dados_ciclo = ""
+        str_dados_ciclo = '<table class="table table-sm table-condensed table-striped">'
         #filtrando apenas as fases
         segmentos_filtered = [x for x in segmentos if x[1] in fases]
         print(segmentos_filtered)
@@ -385,11 +385,12 @@ class SupervisorioCiclos(models.Model):
         for tempo in tempos:
             index = tempos.index(tempo)
             h,m,s = tempo
-            str_dados_ciclo =str_dados_ciclo + f"{fases[index]}: {h}h {m}m {s}s<br/>"
+            str_dados_ciclo =str_dados_ciclo + f'<tr ><td>{fases[index]}:</td><td align="right"> {h}h {m}m {s}s</td></tr>'
         soma_total = self.calcular_soma_tempo(tempos)
         h,m,s = soma_total
         print(f"TOTAL: {h}h {m}m {s}s")
-        str_dados_ciclo =str_dados_ciclo + f"<b>TOTAL</b>: {h}h {m}m {s}s<br/>"
+        str_dados_ciclo =str_dados_ciclo + f'<tr align="right"><td>TOTAL</td><td> {h}h {m}m {s}s</td></tr>'
+        str_dados_ciclo = str_dados_ciclo +"</table>"
         return str_dados_ciclo
     
     def monta_estatisticas_ciclo(self, dados):
