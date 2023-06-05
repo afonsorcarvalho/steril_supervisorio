@@ -41,9 +41,9 @@ class SupervisorioCiclos(models.Model):
     duration = fields.Float("Duração", compute = "_compute_duration",store=True)
     file = fields.Binary()
     modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
+    
     def _get_default_supervisor(self):
         supervisor_default = self.env['ir.config_parameter'].sudo().get_param('steril_supervisorio.supervisor_ciclos')
-        
         return self.env['hr.employee'].search([('id','=', supervisor_default)])
     
     supervisor = fields.Many2one(
@@ -65,7 +65,7 @@ class SupervisorioCiclos(models.Model):
         comodel_name='engc.equipment'
         
     )
-    #fases = fields.One2many(string='',comodel_name='',inverse_name='' )
+    fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
 
     @api.depends('data_inicio', 'data_fim')
     def _compute_duration(self):
@@ -194,10 +194,10 @@ class SupervisorioCiclos(models.Model):
 
     def _calcular_estatisticas_por_fase(self,dados):
         estatisticas = {}
-        fase_atual = None
-        dados_filtered = [x for x in dados if not x[1].startswith('PULSO') and not x[1].startswith('INJETANDO ETO')]
+        fase_atual = None 
+        dados_filtered = [x for x in dados if not x[1].startswith(('PULSO','INJETANDO ETO','CICLO FINALIZADO'))]
       
-            
+       
         for linha in dados_filtered:
             hora = linha[0]
             if len(linha) == 2:
@@ -230,9 +230,6 @@ class SupervisorioCiclos(models.Model):
                     'valor_maximo2': max(valores2),
                     'media2': sum(valores2) / len(valores2),
             }
-
-           
-
 
         return estatisticas_finais
  
@@ -309,7 +306,7 @@ class SupervisorioCiclos(models.Model):
         return [dados,segmentos]
     
     def calcular_diferenca_tempo(self,lista):
-        diferenca_tempo = []
+        diferenca_tempo = {}
         for i in range(1, len(lista)):
             hora1 = datetime.strptime(lista[i-1][0], '%H:%M:%S')
             hora2 = datetime.strptime(lista[i][0], '%H:%M:%S')
@@ -320,7 +317,7 @@ class SupervisorioCiclos(models.Model):
             minutos = (diferenca.seconds // 60) % 60
             segundos = diferenca.seconds % 60
 
-            diferenca_tempo.append((horas, minutos, segundos))
+            diferenca_tempo[lista[i-1][1]] = (horas, minutos, segundos)
         return diferenca_tempo
     
            
@@ -341,8 +338,9 @@ class SupervisorioCiclos(models.Model):
         """
 
         soma_tempo = timedelta()  # Inicializa a soma como zero
+        print(diferencas_tempo)
         for diferenca in diferencas_tempo:
-            horas, minutos, segundos = diferenca
+            horas, minutos, segundos = diferencas_tempo[diferenca]
             delta = timedelta(hours=horas, minutes=minutos, seconds=segundos)
             soma_tempo += delta
         # Extrair horas, minutos e segundos da soma total
@@ -422,25 +420,17 @@ class SupervisorioCiclos(models.Model):
                   'ESTERILIZACAO',
                   'LAVAGEM',
                   'AERACAO',
+                  'CICLO ABORTADO',
                   'CICLO FINALIZADO']
         str_dados_ciclo = '<table class="table table-sm table-condensed table-striped"><tbody>'
         #filtrando apenas as fases
         segmentos_filtered = [x for x in segmentos if x[1] in fases]
        
         #calculando os tempos de cada fase
-        tempos  = self.calcular_diferenca_tempo(segmentos_filtered)
-
-        #mostrando resultados
-        for tempo in tempos:
-            index = tempos.index(tempo)
-            h,m,s = tempo
-            str_dados_ciclo =str_dados_ciclo + f'<tr ><td>{fases[index]}:</td><td align="right"> {h}h {m}m {s}s</td></tr>'
+        tempos  = self.calcular_diferenca_tempo(segmentos_filtered)    
         soma_total = self.calcular_soma_tempo(tempos)
-        h,m,s = soma_total
-       
-        str_dados_ciclo =str_dados_ciclo + f'<tr align="right"><td>TOTAL</td><td> {h}h {m}m {s}s</td></tr>'
-        str_dados_ciclo = str_dados_ciclo +"</tbody></table>"
-        return str_dados_ciclo
+        
+        return [tempos, soma_total]
     
     
     
@@ -458,7 +448,12 @@ class SupervisorioCiclos(models.Model):
         #lendo arquivo com os dados do ciclo
         dados,segmentos = self.ler_arquivo_dados(file)
 
-        self.tempos_ciclo = self.monta_tempos_ciclo(segmentos)
+        tempos,tempo_total = self.monta_tempos_ciclo(segmentos)
+        tempos_integer = {}
+        
+        for tempo in tempos:
+            h,m,s = tempos[tempo]
+            tempos_integer[tempo] = h + m/60 + s/(60*60)
         is_finish,tempo_fim_ciclo = self.get_data_time_fim_de_ciclo(dados,segmentos)
        
         if(is_finish):
@@ -479,12 +474,31 @@ class SupervisorioCiclos(models.Model):
                 })
 
         print(self._calcular_estatisticas_por_fase(dados))
-        self.estatisticas_ciclo = json.dumps(self._calcular_estatisticas_por_fase(dados))
+        estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
+       
+        self.estatisticas_ciclo = json.dumps(estatisticas_finais)
+        print("TEMPOS INTEGER")
+        print(tempos_integer)
+        for fase_key in estatisticas_finais.keys():
+            values = {
+                    'name': fase_key,
+                    'ciclo': self.id,
+                    'duration': tempos_integer.get(fase_key) ,
+                    'pci_min': estatisticas_finais[fase_key]['valor_minimo1'],
+                    'pci_max': estatisticas_finais[fase_key]['valor_maximo1'],
+                    'pci_avg': estatisticas_finais[fase_key]['media1'],
+                    'tci_min': estatisticas_finais[fase_key]['valor_minimo2'],
+                    'tci_max': estatisticas_finais[fase_key]['valor_maximo2'],
+                    'tci_avg': estatisticas_finais[fase_key]['media2'],
+                }
+            fase = self.env['steril_supervisorio.ciclos.fases.eto'].search(['&',('name','=', fase_key),('ciclo','=',self.id)])
+            if len(fase) >  0:
+                fase[0].write(values)
+            else:
+                fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
 
     def action_ler_diretorio(self):
         self.ler_diretorio_ciclos("ETO03")
-
-
 
 class SupervisorioCiclosFasesETO(models.Model):
     _name = 'steril_supervisorio.ciclos.fases.eto'
@@ -502,7 +516,7 @@ class SupervisorioCiclosFasesETO(models.Model):
         
     )
     
-    duration = fields.Integer(string='Duration',help="Duração em segundos da fase")
+    duration = fields.Float(string='Duração(HH:mm)',help="Duração em horas  da fase", widget='float_time')
     pci_max =  fields.Float(string='Pmax C.I.')
     pci_min =  fields.Float(string='Pmin C.I.')
     pci_avg =  fields.Float(string='Pmedia C.I.')
@@ -516,10 +530,16 @@ class SupervisorioCiclosFasesVapor(models.Model):
     _description = 'Fases do Ciclos do supervisorio Vapor'
     _order = 'sequence asc'
 
-    
+    ciclo = fields.Many2one(
+        string='Ciclo',
+        comodel_name='steril_supervisorio.ciclos',
+        ondelete='cascade',
+        required=True
+        
+    )
     sequence = fields.Integer(string="Sequence")
     name = fields.Char("Nome")
-    duration = fields.Integer(string='Duration',help="Duração em segundos da fase")
+    duration = fields.Float(string='Duração(HH:mm)',help="Duração em segundos da fase", widget='float_time')
     pci_max =  fields.Float(string='Pmax C.I.')
     pci_min =  fields.Float(string='Pmin C.I.')
     pci_avg =  fields.Float(string='Pmedia C.I.')
