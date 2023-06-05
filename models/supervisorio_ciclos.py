@@ -157,6 +157,7 @@ class SupervisorioCiclos(models.Model):
                 for arquivo in lista_de_arquivos_txt:  
                     path_full_file = caminho_pasta+'/'+arquivo
                     if self._arquivo_modificado_recentemente(path_full_file):
+                       
                         data_hora_inicio_str = arquivo.split('_')[1] + ' ' + arquivo.split('_')[2].replace('.txt', '')
                         
                         # Converter a data e hora para o formato datetime
@@ -165,7 +166,8 @@ class SupervisorioCiclos(models.Model):
                         ciclo_existente = self.env['steril_supervisorio.ciclos'].search([('name', '=', codigo_ciclo)])
                        
                         if not ciclo_existente:
-                           
+                            
+                            operador_id = self._ler_arquivo_operador(path_full_file)
                             # procurando equipamento pelo apelido
                             
                            
@@ -173,7 +175,7 @@ class SupervisorioCiclos(models.Model):
                             ciclo = self.env['steril_supervisorio.ciclos'].create({
                                 'name': codigo_ciclo,
                                 'data_inicio': data_inicio,
-                              
+                                'operator': operador_id,
                                 'equipment': equipment.id or None,
                                 }
                                 )
@@ -183,6 +185,7 @@ class SupervisorioCiclos(models.Model):
                         
                        
                         if(ciclo ):
+                            
                             ciclo.adicionar_anexo_pdf(path_full_file)
                             ciclo.add_data_file_to_record(path_full_file)
 
@@ -338,7 +341,7 @@ class SupervisorioCiclos(models.Model):
         """
 
         soma_tempo = timedelta()  # Inicializa a soma como zero
-        print(diferencas_tempo)
+      
         for diferenca in diferencas_tempo:
             horas, minutos, segundos = diferencas_tempo[diferenca]
             delta = timedelta(hours=horas, minutes=minutos, seconds=segundos)
@@ -442,12 +445,35 @@ class SupervisorioCiclos(models.Model):
             return True
         else:
             return False
-
+        
+    def _ler_arquivo_operador(self,file):
+        with open(file, 'r') as arquivo:
+            linhas = arquivo.readlines()
+  
+            for linha in linhas:
+                colunas = re.split('\s+', linha)
+                colunas = [valor for valor in colunas if valor]
+               
+                if len(colunas):
+                    if colunas[0] == 'Operador:':
+                        print(colunas)
+                        apelido_operador = self.env['steril_supervisorio.ciclos.apelidos.operador'].search([('name','=',colunas[1])])
+                        if len(apelido_operador):
+                            operador = apelido_operador[0].operador
+                            return operador.id
+    def atualiza_parametro_ultima_atualizacao(self):
+        date = datetime.now()
+        date_str =  date.strftime('%Y-%m-%d %H:%M:%S')
+        existing_param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'steril_supervisorio_ultima_atualizacao')])
+        if existing_param:
+            # Atualiza o valor existente
+            existing_param.sudo().write({'value': date_str})
+            
     def add_data_file_to_record(self,file):
         
         #lendo arquivo com os dados do ciclo
+        
         dados,segmentos = self.ler_arquivo_dados(file)
-
         tempos,tempo_total = self.monta_tempos_ciclo(segmentos)
         tempos_integer = {}
         
@@ -473,15 +499,15 @@ class SupervisorioCiclos(models.Model):
                     'state':'em_andamento'
                 })
 
-        print(self._calcular_estatisticas_por_fase(dados))
         estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
-       
         self.estatisticas_ciclo = json.dumps(estatisticas_finais)
-        print("TEMPOS INTEGER")
-        print(tempos_integer)
+        sequence = 1
+
         for fase_key in estatisticas_finais.keys():
             values = {
+                    'sequence': sequence,
                     'name': fase_key,
+                   
                     'ciclo': self.id,
                     'duration': tempos_integer.get(fase_key) ,
                     'pci_min': estatisticas_finais[fase_key]['valor_minimo1'],
@@ -496,6 +522,7 @@ class SupervisorioCiclos(models.Model):
                 fase[0].write(values)
             else:
                 fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
+            sequence +=1
 
     def action_ler_diretorio(self):
         self.ler_diretorio_ciclos("ETO03")
@@ -516,7 +543,7 @@ class SupervisorioCiclosFasesETO(models.Model):
         
     )
     
-    duration = fields.Float(string='Duração(HH:mm)',help="Duração em horas  da fase", widget='float_time')
+    duration = fields.Float(string='Duração(HH:mm)',help="Duração em horas  da fase")
     pci_max =  fields.Float(string='Pmax C.I.')
     pci_min =  fields.Float(string='Pmin C.I.')
     pci_avg =  fields.Float(string='Pmedia C.I.')
@@ -539,14 +566,15 @@ class SupervisorioCiclosFasesVapor(models.Model):
     )
     sequence = fields.Integer(string="Sequence")
     name = fields.Char("Nome")
-    duration = fields.Float(string='Duração(HH:mm)',help="Duração em segundos da fase", widget='float_time')
+    duration = fields.Float(string='Duração(HH:mm)',help="Duração em segundos da fase")
     pci_max =  fields.Float(string='Pmax C.I.')
     pci_min =  fields.Float(string='Pmin C.I.')
     pci_avg =  fields.Float(string='Pmedia C.I.')
     tci_max =  fields.Float(string='Tmax C.I.')
     tci_min =  fields.Float(string='Tmin C.I.')
     tci_avg =  fields.Float(string='Tmedia C.I.')
-    
+
+
     
    
     

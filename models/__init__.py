@@ -2,6 +2,7 @@
 
 from . import supervisorio_main
 from . import supervisorio_ciclos
+from . import supervisorio_ciclos_apelidos_operador
 from . import res_config_settings
 
  
