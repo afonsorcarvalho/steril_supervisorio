@@ -1,0 +1,33 @@
+
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="steril_supervisorio_apelidos_operador_list_view">
+            <field name="name">steril_supervisorio.apelidos_operador.tree</field>
+            <field name="model">steril_supervisorio.ciclos.apelidos.operador</field>
+            <field name="arch" type="xml">
+                
+                <tree editable="top" >
+                   
+                            <field name="name"/>
+                            <field name="operador"/>
+                      
+                      
+                </tree>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="steril_supervisorio_apelidos_operador_form_view">
+            <field name="name">steril_supervisorio.apelidos_operador.form</field>
+            <field name="model">steril_supervisorio.ciclos.apelidos.operador</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="operador"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
