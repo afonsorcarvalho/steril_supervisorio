@@ -505,7 +505,6 @@ class SupervisorioCiclos(models.Model):
                 })
 
         estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
-        self._add_grafico_ciclo()
         self.estatisticas_ciclo = json.dumps(estatisticas_finais)
         sequence = 1
 
@@ -530,18 +529,40 @@ class SupervisorioCiclos(models.Model):
                 fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
             sequence +=1
     
-    def _get_report_graph(self):
-        # Dados do gráfico (exemplo)
-        x_values = ['A', 'B', 'C', 'D', 'E']
-        y_values = [10, 20, 15, 25, 18]
+    def _get_chart_image(self, file):
+        dados,segmentos = self.ler_arquivo_dados(file)
+        #sanitizando dados
+        dados_sanitizados = [x for x in dados if len(x)>2]
+        print(dados_sanitizados)
+        dados = dados_sanitizados
+        
 
-        # Criação do gráfico
-        fig = go.Figure(data=[go.Bar(x=x_values, y=y_values)])
-        # Renderiza o gráfico em HTML
-        chart_html = plot(fig, output_type='div')
-        return chart_html
+        # Extrair os valores de cada coluna
+        amostra = range(1, len(dados) + 1)
+       
+        pci = [float(item[1]) for item in dados]
+        tci = [float(item[2]) for item in dados]
+       
+        # Configurar o gráfico com subplots
+        fig, ax1 = plt.subplots(figsize=(16, 9))
+        
+        ax1.plot(amostra, pci, label='PCI', color='red',drawstyle='steps-mid')
+        ax1.set_xlabel('Amostra')
+        ax1.set_ylabel('PCI', color='red')
+        #ax1.tick_params('y', colors='red')
+        
+        
+        ax2 = ax1.twinx()
+        ax2.plot(amostra, tci, label='TCI', color='blue',drawstyle='steps-mid')
+        ax2.set_ylabel('TCI', color='blue')
+        #ax2.tick_params('y', colors='blue')
+        
+        # Combine as legendas de ambos os eixos
+        handles, labels = ax1.get_legend_handles_labels()
+        handles2, labels2 = ax2.get_legend_handles_labels()
+        ax1.legend(handles + handles2, labels + labels2)
 
-
+        plt.title('Gráfico P.C.I e T.C.I')
 
               
         # Salvar o gráfico em um buffer
