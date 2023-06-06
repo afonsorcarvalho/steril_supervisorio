@@ -6,7 +6,7 @@
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
                     <div class="page">
-                        <h3>Dados do Ciclo Cod. <span t-field="o.name" /></h3>
+                        <h3>Ciclo Cod. <span t-field="o.name" /></h3>
                         <div class="row">
                             <div class="col-2">
                                 <strong>Equipamento: </strong>
@@ -96,13 +96,19 @@
 
                             </div>
                         </div>
+                        <div class="row">
+                            <div t-raw="o.chart_html"></div>
+
+                        </div>
                         <div class="row mt-5">
                             <div class="col-6  text-center" >
                                 ________________________________________<br/>
+                                <span t-field="o.operator" /><br/>
                                 Operador
                             </div>
                             <div class="col-6  text-center">
                                 ________________________________________<br/>
+                                <span t-field="o.supervisor" /><br/>
                                 Supervisor
 
                             </div>

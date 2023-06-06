@@ -2,7 +2,8 @@
 from odoo import models, fields, api, _
 import base64
 from datetime import date, datetime,timedelta
-
+import plotly.graph_objects as go
+from plotly.offline import plot
 import json
 
 from dateutil.relativedelta import relativedelta
@@ -523,6 +524,21 @@ class SupervisorioCiclos(models.Model):
             else:
                 fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
             sequence +=1
+    
+    def _get_report_graph(self):
+        # Dados do gráfico (exemplo)
+        x_values = ['A', 'B', 'C', 'D', 'E']
+        y_values = [10, 20, 15, 25, 18]
+
+        # Criação do gráfico
+        fig = go.Figure(data=[go.Bar(x=x_values, y=y_values)])
+        # Renderiza o gráfico em HTML
+        chart_html = plot(fig, output_type='div')
+        return chart_html
+
+
+
+
 
     def action_ler_diretorio(self):
         self.ler_diretorio_ciclos("ETO03")
