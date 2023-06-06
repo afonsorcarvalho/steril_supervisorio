@@ -5,7 +5,7 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            
                 
                     <div class="page">
                         <h3>Ciclo Cod. <span t-field="o.name" /></h3>
@@ -40,11 +40,11 @@
                             </div>
 
                         </div>
-
-
-                        <br></br>
-                        <br></br>
-                        
+                        <div class="row mb-5">
+                           <div class="col-12 text-left"  >
+                            <img class="mr-5" t-attf-src="data:image/svg+xml;charset=utf-8;base64,{{o.grafico_ciclo}}" width="100%"/>
+                           </div>
+                        </div>
                         <div class="row">
                             <div class="col text-center">
                                 <table class="table table-condensed table-striped">
@@ -98,13 +98,7 @@
 
                             </div>
                         </div>
-                        <div class="row">
-                            
-                           <div class="col-12  text-center" >
-                            <img t-attf-src="data:image/svg+xml;charset=utf-8;base64,{{o.grafico_ciclo}}"/>
-                           </div>
-
-                        </div>
+                       
                         <div class="row mt-5">
                             <div class="col-6  text-center" >
                                 ________________________________________<br/>

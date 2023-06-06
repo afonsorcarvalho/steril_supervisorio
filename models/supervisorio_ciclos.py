@@ -530,7 +530,10 @@ class SupervisorioCiclos(models.Model):
             sequence +=1
     
     def _get_chart_image(self, file):
+        
+        num_ticks = 11  # Quantidade desejada de ticks no eixo y
         dados,segmentos = self.ler_arquivo_dados(file)
+        
         #sanitizando dados
         dados_sanitizados = [x for x in dados if len(x)>2]
         print(dados_sanitizados)
@@ -542,26 +545,44 @@ class SupervisorioCiclos(models.Model):
        
         pci = [float(item[1]) for item in dados]
         tci = [float(item[2]) for item in dados]
-       
+        if len(pci) == 0:
+            return
+        if len(tci) == 0:
+            return
         # Configurar o gráfico com subplots
-        fig, ax1 = plt.subplots(figsize=(16, 9))
+        fig, ax1 = plt.subplots(figsize=(21, 9))
         
         ax1.plot(amostra, pci, label='PCI', color='red',drawstyle='steps-mid')
+       
         ax1.set_xlabel('Amostra')
         ax1.set_ylabel('PCI', color='red')
-        #ax1.tick_params('y', colors='red')
+        ax1.tick_params('y', colors='red')
         
         
         ax2 = ax1.twinx()
         ax2.plot(amostra, tci, label='TCI', color='blue',drawstyle='steps-mid')
         ax2.set_ylabel('TCI', color='blue')
-        #ax2.tick_params('y', colors='blue')
+        ax2.tick_params('y', colors='blue')
         
+        # Definir escalas fixas para os eixos de PCI e TCI
+        ax1.set_ylim(-1, 0)  # Define a escala fixa de 0 a 10 para o eixo de PCI
+        ax2.set_ylim(0, 100)  # Define a escala fixa de 40 a 60 para o eixo de TCI
+        # Aumentar a quantidade de ticks nos eixos y
+      
+        y_ticks_pci = np.linspace(-1, 0, num_ticks)
+        y_ticks_tci = np.linspace(0, 100, num_ticks)
+
+        ax1.set_yticks(y_ticks_pci)
+        ax2.set_yticks(y_ticks_tci)
+ 
+       
+
         # Combine as legendas de ambos os eixos
         handles, labels = ax1.get_legend_handles_labels()
         handles2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(handles + handles2, labels + labels2)
-
+        ax1.grid(True, color='lightgray')
+        ax2.grid(True, color='gray')
         plt.title('Gráfico P.C.I e T.C.I')
 
               
