@@ -1,9 +1,10 @@
 
 from odoo import models, fields, api, _
+import io
 import base64
 from datetime import date, datetime,timedelta
-import plotly.graph_objects as go
-from plotly.offline import plot
+import numpy as np
+import matplotlib.pyplot as plt
 import json
 
 from dateutil.relativedelta import relativedelta
@@ -68,7 +69,6 @@ class SupervisorioCiclos(models.Model):
     )
     fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
     grafico_ciclo = fields.Binary()
-
     @api.depends('data_inicio', 'data_fim')
     def _compute_duration(self):
         for record in self:
@@ -158,6 +158,7 @@ class SupervisorioCiclos(models.Model):
                 
                 for arquivo in lista_de_arquivos_txt:  
                     path_full_file = caminho_pasta+'/'+arquivo
+                    
                     if self._arquivo_modificado_recentemente(path_full_file):
                        
                         data_hora_inicio_str = arquivo.split('_')[1] + ' ' + arquivo.split('_')[2].replace('.txt', '')
@@ -187,7 +188,7 @@ class SupervisorioCiclos(models.Model):
                         
                        
                         if(ciclo ):
-                            
+                            ciclo.grafico_ciclo = ciclo._get_chart_image(path_full_file)
                             ciclo.adicionar_anexo_pdf(path_full_file)
                             ciclo.add_data_file_to_record(path_full_file)
 
@@ -463,6 +464,7 @@ class SupervisorioCiclos(models.Model):
                         if len(apelido_operador):
                             operador = apelido_operador[0].operador
                             return operador.id
+                        
     def atualiza_parametro_ultima_atualizacao(self):
         date = datetime.now()
         date_str =  date.strftime('%Y-%m-%d %H:%M:%S')
@@ -476,6 +478,7 @@ class SupervisorioCiclos(models.Model):
         #lendo arquivo com os dados do ciclo
         
         dados,segmentos = self.ler_arquivo_dados(file)
+
         tempos,tempo_total = self.monta_tempos_ciclo(segmentos)
         tempos_integer = {}
         
@@ -527,7 +530,7 @@ class SupervisorioCiclos(models.Model):
                 fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
             sequence +=1
     
-    def _add_grafico_ciclo(self):
+    def _get_report_graph(self):
         # Dados do gráfico (exemplo)
         x_values = ['A', 'B', 'C', 'D', 'E']
         y_values = [10, 20, 15, 25, 18]
@@ -535,13 +538,21 @@ class SupervisorioCiclos(models.Model):
         # Criação do gráfico
         fig = go.Figure(data=[go.Bar(x=x_values, y=y_values)])
         # Renderiza o gráfico em HTML
-        fig_image  = fig.to_image(format="png", width=600, height=350, scale=2)
-        self.grafico_ciclo = base64.b64encode(fig_image).decode("utf-8")
+        chart_html = plot(fig, output_type='div')
+        return chart_html
+
+
+
+              
+        # Salvar o gráfico em um buffer
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='svg')
+        buffer.seek(0)
         
-
-
-
-
+        # Fechar a figura atual
+        plt.close()
+        # Retornar os dados da imagem
+        return  base64.b64encode(buffer.read())
 
     def action_ler_diretorio(self):
         self.ler_diretorio_ciclos("ETO03")

@@ -49,7 +49,8 @@
                                         <field name="tci_avg" />
                                     </tree>
                                 </field>
-                       <field name="grafico_ciclo" widget="image"/>
+                                <field name="grafico_ciclo" widget="image" options='{"zoom": true}'/>
+
                        
                         
 
