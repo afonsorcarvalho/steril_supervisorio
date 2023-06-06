@@ -96,10 +96,11 @@
 
                             </div>
                         </div>
-                        <div class="row">
-                            <div t-raw="o.chart_html"></div>
-
-                        </div>
+                        <!-- <div class="row"> -->
+<!--                         
+                        <img t-if="o.image" t-att-src="'data:image/png;base64,%s' % o.grafico_ciclo.decode('utf-8')" style="width:100%;" />
+                 -->
+                        <!-- </div> -->
                         <div class="row mt-5">
                             <div class="col-6  text-center" >
                                 ________________________________________<br/>

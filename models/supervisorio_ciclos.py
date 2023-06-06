@@ -67,6 +67,7 @@ class SupervisorioCiclos(models.Model):
         
     )
     fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
+    grafico_ciclo = fields.Binary()
 
     @api.depends('data_inicio', 'data_fim')
     def _compute_duration(self):
@@ -501,6 +502,7 @@ class SupervisorioCiclos(models.Model):
                 })
 
         estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
+        self._add_grafico_ciclo()
         self.estatisticas_ciclo = json.dumps(estatisticas_finais)
         sequence = 1
 
@@ -525,7 +527,7 @@ class SupervisorioCiclos(models.Model):
                 fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
             sequence +=1
     
-    def _get_report_graph(self):
+    def _add_grafico_ciclo(self):
         # Dados do gráfico (exemplo)
         x_values = ['A', 'B', 'C', 'D', 'E']
         y_values = [10, 20, 15, 25, 18]
@@ -533,8 +535,9 @@ class SupervisorioCiclos(models.Model):
         # Criação do gráfico
         fig = go.Figure(data=[go.Bar(x=x_values, y=y_values)])
         # Renderiza o gráfico em HTML
-        chart_html = plot(fig, output_type='div')
-        return chart_html
+        fig_image  = fig.to_image(format="png", width=600, height=350, scale=2)
+        self.grafico_ciclo = base64.b64encode(fig_image).decode("utf-8")
+        
 
 
 
