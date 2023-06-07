@@ -14,8 +14,30 @@ import pytz
 import re
 from odoo.exceptions import UserError, ValidationError
 import os
-
+FASES = ['LEAK-TEST',
+                  'ACONDICIONAMENTO',
+                  'UMIDIFICACAO',
+                  'ESTERILIZACAO',
+                  'LAVAGEM',
+                  'AERACAO',
+                  'CICLO ABORTADO',
+                  'CICLO FINALIZADO']
 fuso_horario = pytz.timezone('America/Sao_Paulo')
+def is_float(value):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
+        
+def obter_faixas_indices_fases(dados, segmentos):
+    indices_segmentos = []
+    for segmento in segmentos:
+        indices = [i for i, item in enumerate(dados) if len(item) > 1 and item[1] == segmento]
+        if indices:
+            indices_segmentos.append(indices[0])
+    result =   [[indices_segmentos[i], indices_segmentos[i+1]] for i in range(len(indices_segmentos)-1)]
+    return result
 
 class SupervisorioCiclos(models.Model):
     _name = 'steril_supervisorio.ciclos'
@@ -185,11 +207,12 @@ class SupervisorioCiclos(models.Model):
                                 )
 
                         else:
-                            ciclo=ciclo_existente.write({'path_file_ciclo_txt' : path_full_file})
+                            ciclo_existente.write({'path_file_ciclo_txt' : path_full_file})
+                            ciclo=ciclo_existente
                         
-                       
+                        print(ciclo)
                         if(ciclo):
-                            ciclo.grafico_ciclo = ciclo.get_chart_image()
+                            ciclo.get_chart_image()
                             ciclo.adicionar_anexo_pdf()
                             ciclo.add_data_file_to_record()
 
@@ -421,17 +444,10 @@ class SupervisorioCiclos(models.Model):
 
         return existente           
     def monta_tempos_ciclo(self, segmentos):
-        fases = ['LEAK-TEST',
-                  'ACONDICIONAMENTO',
-                  'UMIDIFICACAO',
-                  'ESTERILIZACAO',
-                  'LAVAGEM',
-                  'AERACAO',
-                  'CICLO ABORTADO',
-                  'CICLO FINALIZADO']
+        
         str_dados_ciclo = '<table class="table table-sm table-condensed table-striped"><tbody>'
         #filtrando apenas as fases
-        segmentos_filtered = [x for x in segmentos if x[1] in fases]
+        segmentos_filtered = [x for x in segmentos if x[1] in FASES]
        
         #calculando os tempos de cada fase
         tempos  = self.calcular_diferenca_tempo(segmentos_filtered)    
@@ -530,28 +546,38 @@ class SupervisorioCiclos(models.Model):
                 fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
             sequence +=1
     
+    
     def get_chart_image(self):
         
         num_ticks = 11  # Quantidade desejada de ticks no eixo y
+        # if not self.path_file_ciclo_txt:
+        #     return
         data_full = self.ler_arquivo_dados(self.path_file_ciclo_txt)
         dados,segmentos = data_full
-        print(data_full)
+        dados = [x for x in dados if not x[1].startswith(('PULSO','INJETANDO ETO'))] # retirando todos os dados que tem pulsos
+        
         
         #sanitizando dados
         dados_sanitizados = [x for x in dados if len(x)>2]
+        segmentos_sanitizados = [x for x in segmentos if not x[1].startswith( 'PULSO')]
         print(dados_sanitizados)
-        dados = dados_sanitizados
+        print(segmentos_sanitizados)
+        # Criar uma lista de cores para os segmentos
+        cores = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'gray']
         
 
         # Extrair os valores de cada coluna
-        amostra = range(1, len(dados) + 1)
+        amostra = range(0, len(dados_sanitizados) )
        
-        pci = [float(item[1]) for item in dados]
-        tci = [float(item[2]) for item in dados]
-        if len(pci) == 0:
-            return
-        if len(tci) == 0:
-            return
+        pci = [float(item[1]) for item in dados_sanitizados]
+        tci = [float(item[2]) for item in dados_sanitizados]
+        
+        fases = [item[1] for item in segmentos_sanitizados]
+        indices_fases = obter_faixas_indices_fases(dados,fases)
+        if(len(indices_fases) > 1):
+            indices_fases.append( [indices_fases[-1][1],len(dados_sanitizados)-1 ])
+        print(indices_fases)
+
         # Configurar o gráfico com subplots
         fig, ax1 = plt.subplots(figsize=(21, 9))
         
@@ -560,8 +586,20 @@ class SupervisorioCiclos(models.Model):
         ax1.set_xlabel('Amostra')
         ax1.set_ylabel('PCI', color='red')
         ax1.tick_params('y', colors='red')
-        ax1.fill_between([0,10], -1,0, facecolor='green', alpha=.2)
-        
+
+        # Plotar as áreas preenchidas para cada segmento
+        for fase in indices_fases:
+            ax1.fill_between(fase, -1,0, facecolor=cores[indices_fases.index(fase)], alpha=.2)
+
+        # Criar os patches para a legenda
+        list_patch = []
+        for f in FASES:
+            list_patch.append(plt.Rectangle((0, 0), 1, 1, fc=cores[FASES.index(f)], alpha=0.5))
+       
+
+        # Adicionar a legenda com os patches personalizados
+        #ax1.legend([patch1, patch2], ['Área 1', 'Área 2'])
+                
         ax2 = ax1.twinx()
         ax2.plot(amostra, tci, label='TCI', color='blue',drawstyle='steps-mid')
         ax2.set_ylabel('TCI', color='blue')
@@ -583,7 +621,8 @@ class SupervisorioCiclos(models.Model):
         # Combine as legendas de ambos os eixos
         handles, labels = ax1.get_legend_handles_labels()
         handles2, labels2 = ax2.get_legend_handles_labels()
-        ax1.legend(handles + handles2, labels + labels2)
+        ax1.legend(list_patch,FASES,loc='best')
+        ax2.legend(handles + handles2, labels + labels2,loc='best')
         ax1.grid(True, color='lightgray')
         ax2.grid(True, color='gray')
         plt.title('Gráfico P.C.I e T.C.I')
