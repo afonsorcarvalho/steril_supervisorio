@@ -5,6 +5,7 @@ import base64
 from datetime import date, datetime,timedelta
 import numpy as np
 import matplotlib.pyplot as plt
+
 import json
 
 from dateutil.relativedelta import relativedelta
@@ -586,6 +587,7 @@ class SupervisorioCiclos(models.Model):
         ax1.set_xlabel('Amostra')
         ax1.set_ylabel('PCI', color='red')
         ax1.tick_params('y', colors='red')
+        ax1.tick_params(axis='both',labelsize=12)
 
         # Plotar as áreas preenchidas para cada segmento
         for fase in indices_fases:
@@ -604,6 +606,7 @@ class SupervisorioCiclos(models.Model):
         ax2.plot(amostra, tci, label='TCI', color='blue',drawstyle='steps-mid')
         ax2.set_ylabel('TCI', color='blue')
         ax2.tick_params('y', colors='blue')
+        ax2.tick_params(axis='both',labelsize=12)
         
         # Definir escalas fixas para os eixos de PCI e TCI
         ax1.set_ylim(-1, 0)  # Define a escala fixa de 0 a 10 para o eixo de PCI
@@ -623,11 +626,9 @@ class SupervisorioCiclos(models.Model):
         handles2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(list_patch,FASES,loc='best',fontsize=12)
         ax2.legend(handles + handles2, labels + labels2,loc='best',fontsize=12)
-        
-
         ax1.grid(True, color='lightgray')
         ax2.grid(True, color='gray')
-        plt.title('Gráfico P.C.I e T.C.I')
+        plt.title('Gráfico P.C.I e T.C.I',fontsize=14)
 
               
         # Salvar o gráfico em um buffer
