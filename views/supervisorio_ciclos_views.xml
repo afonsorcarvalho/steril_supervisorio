@@ -9,6 +9,8 @@
                         
                         <button name="action_ler_diretorio" string="Ler diretorio"
                             class="oe_highlight" type="object" groups="base.group_no_one" />
+                        <button name="get_chart_image" string="Atualiza Grafico"
+                            class="oe_highlight" type="object" groups="base.group_no_one" />
                         <field name="state" widget="statusbar" />
                     </header>
 

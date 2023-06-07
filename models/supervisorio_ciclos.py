@@ -61,7 +61,7 @@ class SupervisorioCiclos(models.Model):
         comodel_name='hr.employee',
         
     )
-
+    path_file_ciclo_txt = fields.Char()
     equipment = fields.Many2one(
         string='Equipamento',
         comodel_name='engc.equipment'
@@ -158,7 +158,7 @@ class SupervisorioCiclos(models.Model):
                 
                 for arquivo in lista_de_arquivos_txt:  
                     path_full_file = caminho_pasta+'/'+arquivo
-                    
+                   
                     if self._arquivo_modificado_recentemente(path_full_file):
                        
                         data_hora_inicio_str = arquivo.split('_')[1] + ' ' + arquivo.split('_')[2].replace('.txt', '')
@@ -180,17 +180,18 @@ class SupervisorioCiclos(models.Model):
                                 'data_inicio': data_inicio,
                                 'operator': operador_id,
                                 'equipment': equipment.id or None,
+                                'path_file_ciclo_txt' : path_full_file,
                                 }
                                 )
 
                         else:
-                            ciclo=ciclo_existente
+                            ciclo=ciclo_existente.write({'path_file_ciclo_txt' : path_full_file})
                         
                        
-                        if(ciclo ):
-                            ciclo.grafico_ciclo = ciclo._get_chart_image(path_full_file)
-                            ciclo.adicionar_anexo_pdf(path_full_file)
-                            ciclo.add_data_file_to_record(path_full_file)
+                        if(ciclo):
+                            ciclo.grafico_ciclo = ciclo.get_chart_image()
+                            ciclo.adicionar_anexo_pdf()
+                            ciclo.add_data_file_to_record()
 
         return True   
     # def _sanitiza_dados(self,dados):
@@ -374,7 +375,7 @@ class SupervisorioCiclos(models.Model):
         valor_float = horas + (minutos / 60) + (segundos / 3600)
         return valor_float        
 
-    def adicionar_anexo_pdf(self,caminho_arquivo):
+    def adicionar_anexo_pdf(self):
         """
         Adiciona um anexo ao modelo atual a partir de um arquivo local. 
 
@@ -382,7 +383,7 @@ class SupervisorioCiclos(models.Model):
         :param caminho_arquivo: Caminho completo do arquivo local a ser anexado com o nome do arquivo .
         :return: O objeto de anexo criado ou retorna false caso não exista o arquivo em pdf
         """
-        caminho_arquivo = caminho_arquivo.replace(".txt",".pdf")
+        caminho_arquivo = self.path_file_ciclo_txt.replace(".txt",".pdf")
         with open(caminho_arquivo, 'rb') as arquivo:
             nome_arquivo = os.path.basename(caminho_arquivo)
             arquivo_binario = arquivo.read()
@@ -473,11 +474,11 @@ class SupervisorioCiclos(models.Model):
             # Atualiza o valor existente
             existing_param.sudo().write({'value': date_str})
             
-    def add_data_file_to_record(self,file):
+    def add_data_file_to_record(self):
         
         #lendo arquivo com os dados do ciclo
         
-        dados,segmentos = self.ler_arquivo_dados(file)
+        dados,segmentos = self.ler_arquivo_dados(self.path_file_ciclo_txt)
 
         tempos,tempo_total = self.monta_tempos_ciclo(segmentos)
         tempos_integer = {}
@@ -529,10 +530,12 @@ class SupervisorioCiclos(models.Model):
                 fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
             sequence +=1
     
-    def _get_chart_image(self, file):
+    def get_chart_image(self):
         
         num_ticks = 11  # Quantidade desejada de ticks no eixo y
-        dados,segmentos = self.ler_arquivo_dados(file)
+        data_full = self.ler_arquivo_dados(self.path_file_ciclo_txt)
+        dados,segmentos = data_full
+        print(data_full)
         
         #sanitizando dados
         dados_sanitizados = [x for x in dados if len(x)>2]
@@ -557,7 +560,7 @@ class SupervisorioCiclos(models.Model):
         ax1.set_xlabel('Amostra')
         ax1.set_ylabel('PCI', color='red')
         ax1.tick_params('y', colors='red')
-        
+        ax1.fill_between([0,10], -1,0, facecolor='green', alpha=.2)
         
         ax2 = ax1.twinx()
         ax2.plot(amostra, tci, label='TCI', color='blue',drawstyle='steps-mid')
@@ -594,7 +597,8 @@ class SupervisorioCiclos(models.Model):
         # Fechar a figura atual
         plt.close()
         # Retornar os dados da imagem
-        return  base64.b64encode(buffer.read())
+        self.grafico_ciclo = base64.b64encode(buffer.read())
+        
 
     def action_ler_diretorio(self):
         self.ler_diretorio_ciclos("ETO03")
