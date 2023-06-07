@@ -8,6 +8,7 @@
     'author': 'Afonso Carvalho',
     'depends': ['base','engc_os'],
     'data': [
+        'security/steril_supervisorio_security.xml',
         'security/ir.model.access.csv',
         'views/res_config_settings_views.xml',
         'views/supervisorio_apelidos_operador_views.xml',
