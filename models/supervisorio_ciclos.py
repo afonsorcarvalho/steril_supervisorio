@@ -621,8 +621,10 @@ class SupervisorioCiclos(models.Model):
         # Combine as legendas de ambos os eixos
         handles, labels = ax1.get_legend_handles_labels()
         handles2, labels2 = ax2.get_legend_handles_labels()
-        ax1.legend(list_patch,FASES,loc='best')
-        ax2.legend(handles + handles2, labels + labels2,loc='best')
+        ax1.legend(list_patch,FASES,loc='best',fontsize=12)
+        ax2.legend(handles + handles2, labels + labels2,loc='best',fontsize=12)
+        
+
         ax1.grid(True, color='lightgray')
         ax2.grid(True, color='gray')
         plt.title('Gráfico P.C.I e T.C.I')
