@@ -3,16 +3,12 @@
     <data>
         <record id="category_steril_supervisorio" model="ir.module.category">
             <field name="name">Supervisório</field>
-<<<<<<< HEAD
-           
-=======
         </record>
         <!-- Definição do grupo Operador -->
         <record id="group_administrator" model="res.groups">
             <field name="name">Adminstrador</field>
             <field name="comment">Acesso ilimitado para Adminstradores</field>
             <field name="category_id" ref="category_steril_supervisorio"/>
->>>>>>> e6ea8181dc7cfaa13015c83dc17097e911a3cb41
         </record>
         <!-- Definição do grupo Operador -->
         <record id="group_operador" model="res.groups">
@@ -35,15 +31,9 @@
             <field name="category_id" ref="category_steril_supervisorio"/>
         </record>
 
-<<<<<<< HEAD
-        <!-- Definição das permissões para o grupo Operador -->
-        <record id="group_operador_permission" model="ir.model.access">
-            <field name="name">Permissões do Operador</field>
-=======
         <!-- Definição das permissões para o grupo Manager -->
         <record id="group_operador_permission" model="ir.model.access">
             <field name="name">Permissões do Adiministrador</field>
->>>>>>> e6ea8181dc7cfaa13015c83dc17097e911a3cb41
               <field name="model_id" ref="model_steril_supervisorio_ciclos"/>
               
             <field name="group_id" ref="group_operador"/>
@@ -52,8 +42,6 @@
             <field name="perm_create" eval="False"/>
             <field name="perm_unlink" eval="False"/>
         </record>
-<<<<<<< HEAD
-=======
         <!-- Definição das permissões para o grupo Operador -->
         <record id="group_operador_permission" model="ir.model.access">
             <field name="name">Permissões do Operador</field>
@@ -65,7 +53,6 @@
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
         </record>
->>>>>>> e6ea8181dc7cfaa13015c83dc17097e911a3cb41
 
         <!-- Definição das permissões para o grupo Supervisor -->
         <record id="group_supervisor_permission" model="ir.model.access">
