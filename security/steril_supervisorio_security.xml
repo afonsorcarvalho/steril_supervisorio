@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="category_steril_supervisorio" model="ir.module.category">
+            <field name="name">Supervisório</field>
+        </record>
+        <!-- Definição do grupo Operador -->
+        <record id="group_administrator" model="res.groups">
+            <field name="name">Adminstrador</field>
+            <field name="comment">Acesso ilimitado para Adminstradores</field>
+            <field name="category_id" ref="category_steril_supervisorio"/>
+        </record>
+        <!-- Definição do grupo Operador -->
+        <record id="group_operador" model="res.groups">
+            <field name="name">Operador</field>
+            <field name="comment">Acesso limitado para operadores</field>
+            <field name="category_id" ref="category_steril_supervisorio"/>
+        </record>
+
+        <!-- Definição do grupo Supervisor -->
+        <record id="group_supervisor" model="res.groups">
+            <field name="name">Supervisor</field>
+            <field name="comment">Acesso para supervisores</field>
+            <field name="category_id" ref="category_steril_supervisorio"/>
+        </record>
+
+        <!-- Definição do grupo Enfermagem -->
+        <record id="group_enfermagem" model="res.groups">
+            <field name="name">Enfermagem</field>
+            <field name="comment">Acesso para equipe de enfermagem</field>
+            <field name="category_id" ref="category_steril_supervisorio"/>
+        </record>
+
+        <!-- Definição das permissões para o grupo Manager -->
+        <record id="group_operador_permission" model="ir.model.access">
+            <field name="name">Permissões do Adiministrador</field>
+              <field name="model_id" ref="model_steril_supervisorio_ciclos"/>
+              
+            <field name="group_id" ref="group_operador"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+        <!-- Definição das permissões para o grupo Operador -->
+        <record id="group_operador_permission" model="ir.model.access">
+            <field name="name">Permissões do Operador</field>
+              <field name="model_id" ref="model_steril_supervisorio_ciclos"/>
+              
+            <field name="group_id" ref="group_administrator"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!-- Definição das permissões para o grupo Supervisor -->
+        <record id="group_supervisor_permission" model="ir.model.access">
+            <field name="name">Permissões do Supervisor</field>
+             <field name="model_id" ref="model_steril_supervisorio_ciclos"/>
+            <field name="group_id" ref="group_supervisor"/>
+             
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Definição das permissões para o grupo Enfermagem -->
+        <record id="group_enfermagem_permission" model="ir.model.access">
+            <field name="name">Permissões da Enfermagem</field>
+            <field name="model_id" ref="model_steril_supervisorio_ciclos"/>
+            <field name="group_id" ref="group_enfermagem"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+    </data>
+</odoo>
