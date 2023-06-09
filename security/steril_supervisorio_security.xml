@@ -6,7 +6,7 @@
         </record>
         <!-- Definição do grupo Operador -->
         <record id="group_administrator" model="res.groups">
-            <field name="name">Adminstrador</field>
+            <field name="name">Administrador</field>
             <field name="comment">Acesso ilimitado para Adminstradores</field>
             <field name="category_id" ref="category_steril_supervisorio"/>
         </record>

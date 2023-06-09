@@ -11,7 +11,19 @@
                             class="oe_highlight" type="object" groups="base.group_no_one" />
                         <button name="get_chart_image" string="Atualiza Grafico"
                             class="oe_highlight" type="object" groups="base.group_no_one" />
-                        <field name="state" widget="statusbar" />
+                        <button name="action_inicia_incubacao" string="Inicia Incubação BI"
+                            class="oe_highlight" type="object" groups="steril_supervisorio.group_operador"
+                            states="finalizado"
+                             />
+                        <button name="action_leitura_incubacao" string="Leitura BI"
+                            class="oe_highlight" type="object" groups="steril_supervisorio.group_operador"
+                            states="esperando_biologico"
+                             />
+                        <button name="action_aprova_supervisor" string="Aprovar"
+                            class="oe_highlight" type="object" groups="steril_supervisorio.group_supervisor"
+                            states="esperando_aprovacao_supervisor"
+                             />
+                        <field name="state" widget="statusbar" clickable="1"/>
                     </header>
 
                     <sheet>
@@ -28,15 +40,35 @@
                                 <field name="equipment" />
                                 <field name="supervisor" widget="many2one_avatar_employee" />
                                 <field name="operator" widget="many2one_avatar_employee" />
+                               
                             </group>
-                            <group>
-                                <field name="data_inicio" />
-                                <field name="data_fim" />
-                                <field name="duration" widget="float_time" />
+                            <group >
+                                <group>
+                                    <field name="data_inicio" />
+                                    
+                                </group>
+                                <group>
+                                    <field name="data_fim" />
+                                </group>
+                                <group>
+                                    <field name="duration" widget="float_time" />
+                                </group>
+                                
                             </group>
-
 
                         </group>
+                            <group string="Dados Incubação Indicador Biológico" >
+                                <group>
+                                
+                                    <field name="resultado_bi"  widget="radio" readonly="1"/>
+                                    
+                                </group>
+                                <group>
+                                    <field name="data_incubacao_bi" string="Data Incubação" readonly="1"/>
+                                    <field name="data_leitura_resultado_bi" string="Data Leitura" readonly="1" />
+                                </group>
+                                
+                            </group>
 
                         <group string="Dados do Ciclo" ></group>
                                 <field name="fases" string= "Fases" nolabel="1" readonly="1">

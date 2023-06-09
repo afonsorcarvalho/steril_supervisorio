@@ -1,20 +1,26 @@
-
 from odoo import models, fields, api, _
 import io
 import base64
 from datetime import date, datetime,timedelta
+from dateutil import tz, parser
 import numpy as np
 import matplotlib.pyplot as plt
 
 import json
 
-from dateutil.relativedelta import relativedelta
+
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DATETIME_FORMAT
 import pytz
 import re
 from odoo.exceptions import UserError, ValidationError
 import os
+
+
+import logging
+_logger = logging.getLogger(__name__)
+
+
 FASES = ['LEAK-TEST',
                   'ACONDICIONAMENTO',
                   'UMIDIFICACAO',
@@ -23,7 +29,8 @@ FASES = ['LEAK-TEST',
                   'AERACAO',
                   'CICLO ABORTADO',
                   'CICLO FINALIZADO']
-fuso_horario = pytz.timezone('America/Sao_Paulo')
+fuso_horario = pytz.timezone('America/Sao_Paulo')  # Exemplo de fuso horário (America/Sao_Paulo)
+
 def is_float(value):
         try:
             float(value)
@@ -48,25 +55,28 @@ class SupervisorioCiclos(models.Model):
     _inherit = ['mail.thread', "mail.activity.mixin"]
 
     name = fields.Char(
-        string='Codigo Ciclo',
+        string='Codigo Carga',
     )
     state = fields.Selection(string='Status', selection=[('iniciado', 'Iniciado'),
                                                          ('em_andamento', 'Em andamento'),
                                                          ('finalizado', 'Finalizado') ,
                                                          ('incompleto', 'Incompleto') ,
-                                                         ('esperando_biologico', 'Esperando Resultado'), 
+                                                         ('esperando_biologico', 'Esperando Resultado BI'), 
+                                                         ('esperando_aprovacao_supervisor', 'Esperando Aprovação Supervisor'), 
                                                          ('abortado', 'Abortado'), 
                                                          ('concluido', 'Concluído'), 
                                                          ('cancelado', 'Cancelado'), 
                                                         
-                                                         ], default='iniciado'
+                                                         ], default='iniciado', tracking=True
                                                          )
     data_inicio =  fields.Datetime()
     data_fim =  fields.Datetime(tracking=True)
     duration = fields.Float("Duração", compute = "_compute_duration",store=True)
     file = fields.Binary()
     modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
-    
+    resultado_bi = fields.Selection(selection = [('positivo','Positivo'),('negativo','Negativo')])
+    data_incubacao_bi = fields.Datetime(tracking=True)
+    data_leitura_resultado_bi = fields.Datetime(tracking=True)
     def _get_default_supervisor(self):
         supervisor_default = self.env['ir.config_parameter'].sudo().get_param('steril_supervisorio.supervisor_ciclos')
         return self.env['hr.employee'].search([('id','=', supervisor_default)])
@@ -125,14 +135,25 @@ class SupervisorioCiclos(models.Model):
     
     def _arquivo_modificado_recentemente(self, path_arquivo):
         #pega paramento do sistema com a data da ultima atualizacao dos ciclos
-        time_parametro_sistema = datetime.strptime(self.env['ir.config_parameter'].get_param('steril_supervisorio_ultima_atualizacao'), '%Y-%m-%d %H:%M:%S').date()
+        data_ultima_atualizacao_str = self.env['ir.config_parameter'].get_param('steril_supervisorio_ultima_atualizacao')
+        data_ultima_atualizacao =  parser.parse(data_ultima_atualizacao_str).astimezone(pytz.utc)
+              
         
+        _logger.info(f"Ultima Atualização: {data_ultima_atualizacao}")
 
+       
         timestamp_modificacao = os.path.getmtime(path_arquivo)
-        data_modificacao = datetime.fromtimestamp(timestamp_modificacao).date()            
-        if data_modificacao >= time_parametro_sistema:
+        data_modificacao = datetime.fromtimestamp(timestamp_modificacao, tz=fuso_horario)
+
+        
+        # _logger.info(f"Data original de modificação do arquivo {path_arquivo}: {data_modificacao}")
+        # data_modificacao = fuso_horario.localize(data_ultima_atualizacao).astimezone(pytz.utc).replace(tzinfo=None)                 
+        _logger.info(f"Data modificação do arquivo {path_arquivo}: {data_modificacao}")
+        if data_modificacao >= data_ultima_atualizacao:
+            _logger.info(f"A data {data_modificacao} é maior ou igual  {data_ultima_atualizacao}")
             return True
         else:
+            _logger.info(f"A data {data_modificacao} é menor que  {data_ultima_atualizacao}")
             return False
         
     def convert_date_str_file_to_datetime(self,date_str):
@@ -167,14 +188,15 @@ class SupervisorioCiclos(models.Model):
         
         for nome_pasta in os.listdir(diretorio):
             caminho_pasta = os.path.join(diretorio, nome_pasta)
+            _logger.info(f"Lendo diretorio: {caminho_pasta}")
+           
           
             if os.path.isdir(caminho_pasta):
-                
-                codigo_ciclo = nome_pasta
 
                 
+                codigo_ciclo = nome_pasta
                 lista_de_arquivos = os.listdir(caminho_pasta)
-                
+                _logger.info(f"Lista de arquivo do diretorio: {lista_de_arquivos}")
 
                 # filtrando apenas os arquivos tipo txt
                 lista_de_arquivos_txt = [arquivo for arquivo in lista_de_arquivos if arquivo.endswith('txt')]
@@ -195,8 +217,7 @@ class SupervisorioCiclos(models.Model):
                             
                             operador_id = self._ler_arquivo_operador(path_full_file)
                             # procurando equipamento pelo apelido
-                            
-                           
+
                             #    Criar um novo registro para o código de ciclo
                             ciclo = self.env['steril_supervisorio.ciclos'].create({
                                 'name': codigo_ciclo,
@@ -212,7 +233,7 @@ class SupervisorioCiclos(models.Model):
                             ciclo=ciclo_existente
                         
                         print(ciclo)
-                        if(ciclo):
+                        if(ciclo and ciclo.state not in ['finalizado']):
                             ciclo.get_chart_image()
                             ciclo.adicionar_anexo_pdf()
                             ciclo.add_data_file_to_record()
@@ -484,8 +505,12 @@ class SupervisorioCiclos(models.Model):
                             return operador.id
                         
     def atualiza_parametro_ultima_atualizacao(self):
-        date = datetime.now()
-        date_str =  date.strftime('%Y-%m-%d %H:%M:%S')
+        date = datetime.now(fuso_horario)
+        _logger.info(f"Data de atual sem localize:{date}")
+       
+        
+        
+        date_str =  date.strftime('%Y-%m-%d %H:%M:%S %Z%z')
         existing_param = self.env['ir.config_parameter'].sudo().search([('key', '=', 'steril_supervisorio_ultima_atualizacao')])
         if existing_param:
             # Atualiza o valor existente
@@ -644,6 +669,22 @@ class SupervisorioCiclos(models.Model):
 
     def action_ler_diretorio(self):
         self.ler_diretorio_ciclos("ETO03")
+
+    def action_inicia_incubacao(self):
+        self.write({
+            'state': "esperando_biologico"
+
+        })
+    def action_leitura_incubacao(self):
+        self.write({
+            'state': "esperando_aprovacao_supervisor"
+
+        })
+    def action_aprova_supervisor(self):
+        self.write({
+            'state': "concluido"
+
+        })
 
 class SupervisorioCiclosFasesETO(models.Model):
     _name = 'steril_supervisorio.ciclos.fases.eto'
