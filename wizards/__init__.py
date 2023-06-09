@@ -1,0 +1,1 @@
+from . import inicia_incubacao_bi
