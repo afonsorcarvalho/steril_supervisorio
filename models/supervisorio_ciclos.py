@@ -671,6 +671,14 @@ class SupervisorioCiclos(models.Model):
         self.ler_diretorio_ciclos("ETO03")
 
     def action_inicia_incubacao(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Wizard de Incubação',
+            'res_model': 'steril_supervisorio.incubation_wizard',
+            'view_mode': 'form',
+            'view_type': 'form',
+            'target': 'new',
+         }
         self.write({
             'state': "esperando_biologico"
 
