@@ -11,7 +11,7 @@
                             class="oe_highlight" type="object" groups="base.group_no_one" />
                         <button name="get_chart_image" string="Atualiza Grafico"
                             class="oe_highlight" type="object" groups="base.group_no_one" />
-                        <button name="action_inicia_incubacao" string="Inicia Incubação BI"
+                        <button name="action_inicia_incubacao" string="Inicia Incubação"
                             class="oe_highlight" type="object" groups="steril_supervisorio.group_operador"
                             states="finalizado"
                              />

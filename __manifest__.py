@@ -10,6 +10,7 @@
     'data': [
         'security/steril_supervisorio_security.xml',
         'security/ir.model.access.csv',
+        'wizards/inicia_incubacao_bi.xml',
         'views/res_config_settings_views.xml',
         'views/supervisorio_apelidos_operador_views.xml',
         'views/supervisorio_views.xml',

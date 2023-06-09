@@ -678,16 +678,24 @@ class SupervisorioCiclos(models.Model):
             'view_mode': 'form',
             'view_type': 'form',
             'target': 'new',
+            'context': {'default_ciclo': self.id,
+                        'default_state_ciclo': self.state}
          }
         self.write({
             'state': "esperando_biologico"
 
         })
     def action_leitura_incubacao(self):
-        self.write({
-            'state': "esperando_aprovacao_supervisor"
-
-        })
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Wizard de Incubação',
+            'res_model': 'steril_supervisorio.incubation_wizard',
+            'view_mode': 'form',
+            'view_type': 'form',
+            'target': 'new',
+             'context': {'default_ciclo': self.id,
+                        'default_state_ciclo': self.state}
+         }
     def action_aprova_supervisor(self):
         self.write({
             'state': "concluido"
