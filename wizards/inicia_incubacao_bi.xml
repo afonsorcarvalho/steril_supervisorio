@@ -1,0 +1,20 @@
+
+<odoo>
+    <data>
+        <record id="view_incubation_wizard_form" model="ir.ui.view">
+            <field name="name">incubation.wizard.form</field>
+            <field name="model">steril_supervisorio.incubation_wizard</field>
+            <field name="arch" type="xml">
+                <form string="Wizard de Incubação">
+                    <group>
+                        <field name="date_start"/>
+                    </group>
+                    <footer>
+                        <button name="cancel" string="Cancelar" class="btn-secondary"/>
+                        <button name="save" string="Salvar" class="btn-primary" type="object"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
