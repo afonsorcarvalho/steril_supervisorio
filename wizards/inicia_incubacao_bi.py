@@ -1,6 +1,10 @@
 
 from odoo import models, fields, api
 
+import logging
+_logger = logging.getLogger(__name__)
+
+
 class StartIncubationWizard(models.TransientModel):
     _name = 'steril_supervisorio.incubation_wizard'
     
@@ -60,18 +64,21 @@ class StartIncubationWizard(models.TransientModel):
                 'resultado_bi': self.resultado_bi,
 
             })
-        if self.state_ciclo == 'esperando_aprovavao_supervisor':
+        if self.state_ciclo == 'esperando_aprovacao_supervisor':
             motivo_reprovacao = ""
-            if self.reprovado:
-                state = 'reprovado'
+            _logger.info(self.reprovado)
+            if self.reprovado == True:
                 motivo_reprovacao = self.motivo_reprovacao
-            else:
-                state = 'aprovado'
-            self.ciclo.write({
-                'data_leitura_resultado_bi': self.date_end,
-                'state':state,
-                'resultado_bi': self.resultado_bi,
-                'motivo_reprovacao': motivo_reprovacao,
+                self.ciclo.write({
+                
+                'state':'reprovado',
+                
+                'motivo_reprovado': motivo_reprovacao,
 
-            })
-        return {'type': 'ir.actions.act_window_close'}
+                })
+            else:
+                self.ciclo.write({'state':'concluido'})
+               
+       
+            
+        

@@ -40,6 +40,35 @@
                             </div>
 
                         </div>
+                         <div class = "row">
+                            <div class="col-4">
+                               <strong>Resultado do Indicador Biológico: </strong>
+                            </div>
+                            
+                            <!-- <t t-if="o.resultado_bi == 'negativo'"> -->
+                                
+                                <t t-set="colores" t-value="red" />
+                                
+                                
+                            <!-- </t> -->
+                            <!-- <t t-if="o.resultado_bi == 'Positivo'"> -->
+                                
+                                <!-- <t t-set="color" t-value="red" /> -->
+                                
+                            <!-- </t> -->
+                            
+                            <div class="col-2"  >
+                               <!-- <span t-field="o.resultado_bi" t-attf-style="color:{color}" /> -->
+                               
+                               <t t-if="o.resultado_bi == 'positivo'">
+                                <span t-field="o.resultado_bi" t-attf-style="color:red;" />
+                               </t>
+                               <t t-if="o.resultado_bi == 'negativo'">
+                                <span t-field="o.resultado_bi" t-attf-style="color:green;" />
+                               </t>
+                               
+                            </div>
+                       </div>
                         <div class="row mb-5">
                            <div class="col-12 text-left"  >
                             <img class="mr-5" t-attf-src="data:image/svg+xml;charset=utf-8;base64,{{o.grafico_ciclo}}" width="100%"/>
@@ -98,7 +127,7 @@
 
                             </div>
                         </div>
-                       
+                      
                         <div class="row mt-5">
                             <div class="col-6  text-center" >
                                 ________________________________________<br/>

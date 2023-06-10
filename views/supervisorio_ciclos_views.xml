@@ -23,7 +23,7 @@
                             class="oe_highlight" type="object" groups="steril_supervisorio.group_supervisor"
                             states="esperando_aprovacao_supervisor"
                              />
-                        <button name="action_reprovar_supervisor" string="Reprovar"
+                        <button name="action_reprova_supervisor" string="Reprovar"
                              type="object" groups="steril_supervisorio.group_supervisor"
                             states="esperando_aprovacao_supervisor"
                              />
