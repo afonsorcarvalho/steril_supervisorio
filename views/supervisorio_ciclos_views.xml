@@ -27,7 +27,7 @@
                              type="object" groups="steril_supervisorio.group_supervisor"
                             states="esperando_aprovacao_supervisor"
                              />
-                        <field name="state" widget="statusbar" />
+                        <field name="state" widget="statusbar" statusbar_visible="em_andamento,finalizado,esperando_biologico,esperando_aprovacao_supervisor,concluido" />
                     </header>
 
                     <sheet>
