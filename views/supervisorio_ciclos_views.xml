@@ -27,7 +27,7 @@
                              type="object" groups="steril_supervisorio.group_supervisor"
                             states="esperando_aprovacao_supervisor"
                              />
-                        <field name="state" widget="statusbar" clickable="1"/>
+                        <field name="state" widget="statusbar" />
                     </header>
 
                     <sheet>
