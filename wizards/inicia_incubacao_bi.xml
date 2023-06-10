@@ -22,9 +22,7 @@
                             attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico'))] }"
                             />
                             <field name="resultado_bi" string="Resultado BI"  widget="radio" 
-                            
-                            
-                            attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico'))],'required': [('state_ciclo','not in',('esperando_biologico'))]}"
+                            attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico'))],'required': [('state_ciclo','in',('esperando_biologico'))]}"
                             />
                         </group>
                     </group>
