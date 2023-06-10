@@ -66,6 +66,7 @@ class SupervisorioCiclos(models.Model):
                                                          ('abortado', 'Abortado'), 
                                                          ('concluido', 'Concluído'), 
                                                          ('cancelado', 'Cancelado'), 
+                                                         ('reprovado', 'Reprovado'), 
                                                         
                                                          ], default='iniciado', tracking=True
                                                          )
@@ -102,6 +103,7 @@ class SupervisorioCiclos(models.Model):
     )
     fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
     grafico_ciclo = fields.Binary()
+    motivo_reprovado = fields.Char()
     @api.depends('data_inicio', 'data_fim')
     def _compute_duration(self):
         for record in self:
@@ -673,7 +675,7 @@ class SupervisorioCiclos(models.Model):
     def action_inicia_incubacao(self):
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Wizard de Incubação',
+            'name': 'Inicia Incubação',
             'res_model': 'steril_supervisorio.incubation_wizard',
             'view_mode': 'form',
             'view_type': 'form',
@@ -688,7 +690,7 @@ class SupervisorioCiclos(models.Model):
     def action_leitura_incubacao(self):
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Wizard de Incubação',
+            'name': 'Leitura de Incubação',
             'res_model': 'steril_supervisorio.incubation_wizard',
             'view_mode': 'form',
             'view_type': 'form',
@@ -697,10 +699,32 @@ class SupervisorioCiclos(models.Model):
                         'default_state_ciclo': self.state}
          }
     def action_aprova_supervisor(self):
-        self.write({
-            'state': "concluido"
-
-        })
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Motivo Reprovação',
+            'res_model': 'steril_supervisorio.incubation_wizard',
+            'view_mode': 'form',
+            'view_type': 'form',
+            'target': 'new',
+             'context': {'default_ciclo': self.id,
+                        'default_state_ciclo': self.state,
+                        'default_reprovado': False,
+                        }
+        }
+    def action_reprova_supervisor(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Motivo Reprovação',
+            'res_model': 'steril_supervisorio.incubation_wizard',
+            'view_mode': 'form',
+            'view_type': 'form',
+            'target': 'new',
+             'context': {'default_ciclo': self.id,
+                        'default_state_ciclo': self.state,
+                        'default_reprovado': True,
+                        }
+        }
+       
 
 class SupervisorioCiclosFasesETO(models.Model):
     _name = 'steril_supervisorio.ciclos.fases.eto'

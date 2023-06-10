@@ -20,6 +20,7 @@ class StartIncubationWizard(models.TransientModel):
                                                          ('abortado', 'Abortado'), 
                                                          ('concluido', 'Concluído'), 
                                                          ('cancelado', 'Cancelado'), 
+                                                         ('reprovado', 'Reprovado'), 
                                                         
                                                          ] 
                                                          )
@@ -35,6 +36,8 @@ class StartIncubationWizard(models.TransientModel):
         
         
     )
+    reprovado = fields.Boolean()
+    motivo_reprovacao =  fields.Char(string='')
 
     
     def cancel(self):
@@ -55,6 +58,20 @@ class StartIncubationWizard(models.TransientModel):
                 'data_leitura_resultado_bi': self.date_end,
                 'state':'esperando_aprovacao_supervisor',
                 'resultado_bi': self.resultado_bi,
+
+            })
+        if self.state_ciclo == 'esperando_aprovavao_supervisor':
+            motivo_reprovacao = ""
+            if self.reprovado:
+                state = 'reprovado'
+                motivo_reprovacao = self.motivo_reprovacao
+            else:
+                state = 'aprovado'
+            self.ciclo.write({
+                'data_leitura_resultado_bi': self.date_end,
+                'state':state,
+                'resultado_bi': self.resultado_bi,
+                'motivo_reprovacao': motivo_reprovacao,
 
             })
         return {'type': 'ir.actions.act_window_close'}

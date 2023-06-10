@@ -5,13 +5,16 @@
             <field name="name">incubation.wizard.form</field>
             <field name="model">steril_supervisorio.incubation_wizard</field>
             <field name="arch" type="xml">
-                <form string="Inciar Incubação Biológico">
+                <form string="Wizard Ciclos">
                     <group>
                         <group>
                             <field name="ciclo" 
                             invisible="1"
                             />
                             <field name="state_ciclo" 
+                            invisible="1"
+                            />
+                            <field name="reprovado" 
                             invisible="1"
                             />
                             
@@ -23,6 +26,9 @@
                             />
                             <field name="resultado_bi" string="Resultado BI"  widget="radio" 
                             attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico'))],'required': [('state_ciclo','in',('esperando_biologico'))]}"
+                            />
+                            <field name="motivo_reprovado" string="Motivo Reprovação"  
+                            attrs="{'invisible': [('state_ciclo','not in',('esperando_aprovacao_supervisor')),('reprovado','not',True)],'required': [('state_ciclo','in',('esperando_aprovacao_supervisor')),('reprovado','=',True)]}"
                             />
                         </group>
                     </group>
