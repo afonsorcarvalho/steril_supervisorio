@@ -53,10 +53,20 @@ class SupervisorioCiclos(models.Model):
     _description = 'Ciclos do supervisorio'
     _order = 'data_inicio desc'
     _inherit = ['mail.thread', "mail.activity.mixin"]
+    
 
     name = fields.Char(
         string='Codigo Carga',
     )
+    
+    company_id = fields.Many2one(
+        string='Company', 
+        comodel_name='res.company', 
+        required=True, 
+        default=lambda self: self.env.user.company_id
+    )
+    
+
     codigo_ciclo = fields.Char("Codigo Ciclo")
     state = fields.Selection(string='Status', selection=[('iniciado', 'Iniciado'),
                                                          ('em_andamento', 'Em andamento'),

@@ -41,6 +41,12 @@
                             bg_color="bg-success"
                             attrs="{'invisible': [('state', 'not in', ['concluido'])]}"
                         />
+                        <widget
+                            name="web_ribbon"
+                            text="Reprovado"
+                            bg_color="bg-danger"
+                            attrs="{'invisible': [('state', 'not in', ['reprovado'])]}"
+                        />
                         
                         <div class="oe_title">
                             <label for='name' />
@@ -76,6 +82,15 @@
                             </group>
 
                         </group>
+                            <group string="Motivos Reprovação"  attrs="{'invisible': [('state', 'not in', ['reprovado'])]}">
+                                <group>
+                                
+                                    <field name="motivo_reprovado" string="Motivo Reprovação" readonly="1"/>
+                                    
+                                </group>
+                                
+                                
+                            </group>
                             <group string="Dados Incubação Indicador Biológico" >
                                 <group>
                                 
@@ -140,6 +155,12 @@
                      <filter string="Data de Início" name="filter_date_range" context="{'group_by': 'data_inicio'}"/>
                    
                 </search>
+                <searchpanel>
+                    <field name="state" />
+                    <field name="operator" />
+                    <field name="company_id" />
+                    
+                </searchpanel>
             </field>
         </record>
         <record model="ir.ui.view" id="steril_supervisorio_ciclos_tree_view">
@@ -150,24 +171,25 @@
                     decoration-muted="state == 'incompleto'"
                     decoration-success="state == 'concluido'"
                     decoration-warning="state == 'finalizado'"
-                    decoration-info="state == 'iniciado'"
-                    decoration-danger="state == 'em_andamento'"
+                    decoration-info="state == 'iniciado' or state == 'em_andamento'"
+                    decoration-danger="state == 'reprovado'"
                 >
                     <field name="state"  widget="badge" 
                         decoration-muted="state == 'incompleto'"
                         decoration-success="state == 'concluido'"
-                        decoration-warning="state == 'finalizado'"
-                        decoration-info="state == 'iniciado'"
-                        decoration-danger="state == 'em_andamento'" />
+                        decoration-warning="state == 'finalizado' "
+                        decoration-info="state == 'iniciado' or state == 'em_andamento'"
+                        decoration-danger="state == 'reprovado'"/>
                     <field name="name" />
                     <field name="equipment" />
                     <field name="data_inicio" />
                     <field name="data_fim" /> 
                     <field name="duration" widget="float_time" />
-                    <field name="supervisor"  widget="badge" 
+                    <field name="supervisor"  widget="many2one_avatar_employee" 
                        
                     />
-                    <field name="operator"  widget="badge" />
+                    <field name="operator"  widget="many2one_avatar_employee" />
+                    <field name="company_id"  widget="badge" />
                 </tree>
             </field>
         </record>
