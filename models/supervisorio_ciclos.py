@@ -57,6 +57,7 @@ class SupervisorioCiclos(models.Model):
     name = fields.Char(
         string='Codigo Carga',
     )
+    codigo_ciclo = fields.Char("Codigo Ciclo")
     state = fields.Selection(string='Status', selection=[('iniciado', 'Iniciado'),
                                                          ('em_andamento', 'Em andamento'),
                                                          ('finalizado', 'Finalizado') ,
@@ -104,6 +105,10 @@ class SupervisorioCiclos(models.Model):
     fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
     grafico_ciclo = fields.Binary()
     motivo_reprovado = fields.Char()
+
+    _sql_constraints = [('codigo_ciclo_equipment_unique', 'unique(codigo_ciclo, equipment)',
+                         'Codigo de ciclo duplicado '
+                         'Não é permitido')]
     @api.depends('data_inicio', 'data_fim')
     def _compute_duration(self):
         for record in self:
@@ -196,33 +201,35 @@ class SupervisorioCiclos(models.Model):
             if os.path.isdir(caminho_pasta):
 
                 
-                codigo_ciclo = nome_pasta
+                codigo_carga = nome_pasta
                 lista_de_arquivos = os.listdir(caminho_pasta)
                 _logger.info(f"Lista de arquivo do diretorio: {lista_de_arquivos}")
 
                 # filtrando apenas os arquivos tipo txt
                 lista_de_arquivos_txt = [arquivo for arquivo in lista_de_arquivos if arquivo.endswith('txt')]
-                
+                _logger.info(f"Lista de arquivos encontrada: {lista_de_arquivos_txt}") 
                 for arquivo in lista_de_arquivos_txt:  
                     path_full_file = caminho_pasta+'/'+arquivo
                    
                     if self._arquivo_modificado_recentemente(path_full_file):
-                       
-                        data_hora_inicio_str = arquivo.split('_')[1] + ' ' + arquivo.split('_')[2].replace('.txt', '')
+                        arquivo_partes = arquivo.split('_')
+                        data_hora_inicio_str = arquivo_partes[1] + ' ' + arquivo_partes[2].replace('.txt', '')
+                        codigo_ciclo = arquivo.replace('.txt','')
                         
                         # Converter a data e hora para o formato datetime
                         data_inicio = self.convert_date_str_file_to_datetime(data_hora_inicio_str)
                         # Verificar se o código de ciclo já existe no modelo
-                        ciclo_existente = self.env['steril_supervisorio.ciclos'].search([('name', '=', codigo_ciclo)])
-                       
-                        if not ciclo_existente:
+                        ciclo_existente = self.env['steril_supervisorio.ciclos'].search([('codigo_ciclo', '=', codigo_ciclo)])
+                        _logger.debug(ciclo_existente)
+                        if len(ciclo_existente) < 1: #não existe ciclo
                             
                             operador_id = self._ler_arquivo_operador(path_full_file)
                             # procurando equipamento pelo apelido
 
                             #    Criar um novo registro para o código de ciclo
                             ciclo = self.env['steril_supervisorio.ciclos'].create({
-                                'name': codigo_ciclo,
+                                'name': codigo_carga,
+                                'codigo_ciclo': codigo_ciclo,
                                 'data_inicio': data_inicio,
                                 'operator': operador_id,
                                 'equipment': equipment.id or None,
@@ -498,8 +505,9 @@ class SupervisorioCiclos(models.Model):
                 colunas = re.split('\s+', linha)
                 colunas = [valor for valor in colunas if valor]
                
-                if len(colunas):
+                if len(colunas) > 1:
                     if colunas[0] == 'Operador:':
+
                         print(colunas)
                         apelido_operador = self.env['steril_supervisorio.ciclos.apelidos.operador'].search([('name','=',colunas[1])])
                         if len(apelido_operador):

@@ -27,17 +27,32 @@
                              type="object" groups="steril_supervisorio.group_supervisor"
                             states="esperando_aprovacao_supervisor"
                              />
-                        <field name="state" widget="statusbar" statusbar_visible="em_andamento,finalizado,esperando_biologico,esperando_aprovacao_supervisor,concluido" />
+                        <field name="state" widget="statusbar" 
+                            statusbar_visible="em_andamento,finalizado,esperando_biologico,esperando_aprovacao_supervisor,concluido" 
+                           
+                            />
                     </header>
 
                     <sheet>
-
+                        <div class="oe_button_box" name="button_box" />
+                        <widget
+                            name="web_ribbon"
+                            text="Concluído"
+                            bg_color="bg-success"
+                            attrs="{'invisible': [('state', 'not in', ['concluido'])]}"
+                        />
+                        
                         <div class="oe_title">
-                            <label for='name'>Ciclo</label>
+                            <label for='name' />
                             <h1 class="d-flex flex-row">
                                 <field name="name" required="True"
                                     style="font-size: min(4vw, 2.6rem);" class="ms-3" />
                             </h1>
+                            <label for='codigo_ciclo' />
+                            <h2 class="d-flex flex-row">
+                                <field name="codigo_ciclo" required="True"
+                                    style="font-size: min(4vw, 2.6rem);" class="ms-3" />
+                            </h2>
                         </div>
                         <group>
                             <group>
@@ -133,13 +148,15 @@
             <field name="arch" type="xml">
                 <tree
                     decoration-muted="state == 'incompleto'"
-                    decoration-success="state == 'finalizado'"
+                    decoration-success="state == 'concluido'"
+                    decoration-warning="state == 'finalizado'"
                     decoration-info="state == 'iniciado'"
                     decoration-danger="state == 'em_andamento'"
                 >
                     <field name="state"  widget="badge" 
                         decoration-muted="state == 'incompleto'"
-                        decoration-success="state == 'finalizado'"
+                        decoration-success="state == 'concluido'"
+                        decoration-warning="state == 'finalizado'"
                         decoration-info="state == 'iniciado'"
                         decoration-danger="state == 'em_andamento'" />
                     <field name="name" />
