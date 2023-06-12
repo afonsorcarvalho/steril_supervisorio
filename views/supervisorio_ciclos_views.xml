@@ -95,6 +95,7 @@
                                 <group>
                                 
                                     <field name="resultado_bi"  widget="radio" readonly="1"/>
+                                    <field name="indicador_biologico" />
                                     
                                 </group>
                                 <group>

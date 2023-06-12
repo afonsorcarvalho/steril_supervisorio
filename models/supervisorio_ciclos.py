@@ -86,6 +86,10 @@ class SupervisorioCiclos(models.Model):
     duration = fields.Float("Duração", compute = "_compute_duration",store=True)
     file = fields.Binary()
     modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
+    indicador_biologico = fields.Many2one(
+        'steril_supervisorio.ciclos.indicador.biologico',
+        string='Lote BI',
+        )
     resultado_bi = fields.Selection(selection = [('positivo','Positivo'),('negativo','Negativo')])
     data_incubacao_bi = fields.Datetime(tracking=True)
     data_leitura_resultado_bi = fields.Datetime(tracking=True)
@@ -732,6 +736,17 @@ class SupervisorioCiclos(models.Model):
                         }
         }
        
+
+class SupervisorioCiclosIndicadorBiologico(models.Model):
+    _name = 'steril_supervisorio.ciclos.indicador.biologico'
+    _description = 'Indicador Biológico'
+   
+    name = fields.Char("Lote")
+    marca = fields.Char()
+    modelo = fields.Char()
+    data_fabricacao = fields.Date()
+    data_validade = fields.Date()
+
 
 class SupervisorioCiclosFasesETO(models.Model):
     _name = 'steril_supervisorio.ciclos.fases.eto'

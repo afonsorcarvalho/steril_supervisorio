@@ -14,6 +14,10 @@ class StartIncubationWizard(models.TransientModel):
         
        
         )
+    indicador_biologico = fields.Many2one(
+        'steril_supervisorio.ciclos.indicador.biologico',
+        string='Lote BI', required=True
+        )
     resultado_bi = fields.Selection(selection = [('positivo','Positivo'),('negativo','Negativo')])
     state_ciclo = fields.Selection(string='Status', selection=[('iniciado', 'Iniciado'),
                                                          ('em_andamento', 'Em andamento'),
@@ -55,6 +59,7 @@ class StartIncubationWizard(models.TransientModel):
             self.ciclo.write({
                 'data_incubacao_bi': self.date_start,
                 'state':'esperando_biologico',
+                'indicador_biologico': self.indicador_biologico,
 
             })
         if self.state_ciclo == 'esperando_biologico':
