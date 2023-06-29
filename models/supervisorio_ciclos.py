@@ -5,6 +5,8 @@ from datetime import date, datetime,timedelta
 from dateutil import tz, parser
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import Counter
+import plotly as plotly
 
 import json
 
@@ -90,6 +92,17 @@ class SupervisorioCiclos(models.Model):
         'steril_supervisorio.ciclos.indicador.biologico',
         string='Lote BI',
         )
+  
+    marca_bi = fields.Char(
+        related='indicador_biologico.marca',
+        readonly=True,
+        store=True)
+    modelo_bi = fields.Char(
+        related='indicador_biologico.modelo',
+        
+        readonly=True,
+        store=True)
+    
     resultado_bi = fields.Selection(selection = [('positivo','Positivo'),('negativo','Negativo')])
     data_incubacao_bi = fields.Datetime(tracking=True)
     data_leitura_resultado_bi = fields.Datetime(tracking=True)
@@ -119,6 +132,20 @@ class SupervisorioCiclos(models.Model):
     fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
     grafico_ciclo = fields.Binary()
     motivo_reprovado = fields.Char()
+
+    # plotly_chart = fields.Text(
+    #     string='Plotly Chart',
+    #     compute='_compute_plotly_chart',
+        
+    # )
+    # def _compute_plotly_chart(self):
+    #     for rec in self:
+    #         rec.get_chart_image()
+        # for rec in self:
+        #     data = [{'x': [1, 2, 3], 'y': [2, 3, 4]}]
+        #     rec.plotly_chart = plotly.offline.plot(data,
+        #                                  include_plotlyjs=False,
+        #                                  output_type='div')
 
     _sql_constraints = [('codigo_ciclo_equipment_unique', 'unique(codigo_ciclo, equipment)',
                          'Codigo de ciclo duplicado '
@@ -214,7 +241,6 @@ class SupervisorioCiclos(models.Model):
           
             if os.path.isdir(caminho_pasta):
 
-                
                 codigo_carga = nome_pasta
                 lista_de_arquivos = os.listdir(caminho_pasta)
                 _logger.info(f"Lista de arquivo do diretorio: {lista_de_arquivos}")
@@ -256,7 +282,8 @@ class SupervisorioCiclos(models.Model):
                             ciclo=ciclo_existente
                         
                         print(ciclo)
-                        if(ciclo and ciclo.state not in ['finalizado']):
+                        #if(ciclo and ciclo.state not in ['finalizado']):
+                        if(ciclo):
                             ciclo.get_chart_image()
                             ciclo.adicionar_anexo_pdf()
                             ciclo.add_data_file_to_record()
@@ -297,6 +324,13 @@ class SupervisorioCiclos(models.Model):
             valores1 = valores_fase['valores1']
             valores2 = valores_fase['valores2']
             if len(valores1) > 0 and len(valores2) > 0:
+                contador_valores1 = Counter(valores1)
+                print(contador_valores1)
+                contador_valores2 = Counter(valores2)
+                print(contador_valores2)
+                valor_maior_frequencia1 = contador_valores1.most_common(1)[0][0]
+                valor_maior_frequencia2 = contador_valores2.most_common(1)[0][0]
+
                 estatisticas_finais[fase] = {
                     'valor_minimo1': min(valores1 or []),
                     'valor_maximo1': max(valores1),
@@ -304,7 +338,9 @@ class SupervisorioCiclos(models.Model):
                     'valor_minimo2': min(valores2 or []),
                     'valor_maximo2': max(valores2),
                     'media2': sum(valores2) / len(valores2),
-            }
+                    'valor_maior_frequencia1': valor_maior_frequencia1,
+                    'valor_maior_frequencia2': valor_maior_frequencia2,
+                }
 
         return estatisticas_finais
  
@@ -457,8 +493,16 @@ class SupervisorioCiclos(models.Model):
             arquivo_binario = arquivo.read()
             arquivo_base64 = base64.b64encode(arquivo_binario)
         # Verificar se o arquivo já está presente nos anexos
-        if self._file_attachment_exist(nome_arquivo):
-            return
+        
+        existente = self._file_attachment_exist( nome_arquivo )
+        if existente:
+            if len(existente.datas) != len(arquivo_base64):
+                _logger.info("Arquivo é diferente, atualizando")
+                existente.write({'datas': arquivo_base64})
+                return existente
+            else:
+                _logger.info("Arquivo é igual, não faz nada")
+                return existente
 
         attachment = self.env['ir.attachment'].create({
             'name': nome_arquivo,
@@ -472,7 +516,7 @@ class SupervisorioCiclos(models.Model):
         self.write({'message_main_attachment_id' : attachment.id } )         
         return attachment
     
-    def _file_attachment_exist(self, file):
+    def _file_attachment_exist(self, file_name):
         """
         Verifica se o arquivo já está presente nos anexos do modelo.
 
@@ -482,12 +526,17 @@ class SupervisorioCiclos(models.Model):
         """
 
         existente = self.env['ir.attachment'].search([
-            ('name', '=', file),
+            ('name', '=', file_name),
             ('res_model', '=', 'steril_supervisorio.ciclos'),
             ('res_id', '=', self.id),
         ])
 
-        return existente           
+        if existente:
+            return existente
+        else:
+            return False
+
+            
     def monta_tempos_ciclo(self, segmentos):
         
         str_dados_ciclo = '<table class="table table-sm table-condensed table-striped"><tbody>'
@@ -585,9 +634,11 @@ class SupervisorioCiclos(models.Model):
                     'pci_min': estatisticas_finais[fase_key]['valor_minimo1'],
                     'pci_max': estatisticas_finais[fase_key]['valor_maximo1'],
                     'pci_avg': estatisticas_finais[fase_key]['media1'],
+                    'pci_freq': estatisticas_finais[fase_key]['valor_maior_frequencia1'],
                     'tci_min': estatisticas_finais[fase_key]['valor_minimo2'],
                     'tci_max': estatisticas_finais[fase_key]['valor_maximo2'],
                     'tci_avg': estatisticas_finais[fase_key]['media2'],
+                    'tci_freq': estatisticas_finais[fase_key]['valor_maior_frequencia2'],
                 }
             fase = self.env['steril_supervisorio.ciclos.fases.eto'].search(['&',('name','=', fase_key),('ciclo','=',self.id)])
             if len(fase) >  0:
@@ -621,6 +672,11 @@ class SupervisorioCiclos(models.Model):
        
         pci = [float(item[1]) for item in dados_sanitizados]
         tci = [float(item[2]) for item in dados_sanitizados]
+
+        # data = [{'y': pci},{'y': tci}]
+        # self.plotly_chart = plotly.offline.plot(data,
+        #                                   include_plotlyjs=False,
+        #                                   output_type='div')
         
         fases = [item[1] for item in segmentos_sanitizados]
         indices_fases = obter_faixas_indices_fases(dados,fases)
@@ -693,6 +749,7 @@ class SupervisorioCiclos(models.Model):
 
     def action_ler_diretorio(self):
         self.ler_diretorio_ciclos("ETO03")
+        self.ler_diretorio_ciclos("ETO02")
 
     def action_inicia_incubacao(self):
         return {
@@ -714,7 +771,8 @@ class SupervisorioCiclos(models.Model):
             'view_mode': 'form',
             'view_type': 'form',
             'target': 'new',
-             'context': {'default_ciclo': self.id,
+            'context': {'default_ciclo': self.id,
+                        'default_indicador_bi': self.indicador_biologico,
                         'default_state_ciclo': self.state}
          }
     def action_aprova_supervisor(self):
@@ -732,6 +790,7 @@ class SupervisorioCiclos(models.Model):
             'target': 'new',
              'context': {'default_ciclo': self.id,
                         'default_state_ciclo': self.state,
+                        'default_indicador_bi': self.indicador_biologico,
                         'default_reprovado': True,
                         }
         }
@@ -768,9 +827,12 @@ class SupervisorioCiclosFasesETO(models.Model):
     pci_max =  fields.Float(string='Pmax C.I.')
     pci_min =  fields.Float(string='Pmin C.I.')
     pci_avg =  fields.Float(string='Pmedia C.I.')
+    pci_freq =  fields.Float(string='Pfreq C.I.')
     tci_max =  fields.Float(string='Tmax C.I.')
     tci_min =  fields.Float(string='Tmin C.I.')
     tci_avg =  fields.Float(string='Tmedia C.I.')
+    tci_freq =  fields.Float(string='Tfreq C.I.')
+    
 
 class SupervisorioCiclosFasesVapor(models.Model):
     _name = 'steril_supervisorio.ciclos.fases.vapor'

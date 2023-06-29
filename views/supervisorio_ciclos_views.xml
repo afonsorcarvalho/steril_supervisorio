@@ -119,6 +119,9 @@
                                     </tree>
                                 </field>
                                 <field name="grafico_ciclo" widget="image" options='{"zoom": true}'/>
+                                 <!-- <div>
+                                    <field name="plotly_chart" widget="plotly_chart" nolabel="1"/>
+                                </div> -->
 
                     </sheet>
                     <div class="oe_chatter">
@@ -191,5 +194,56 @@
                 </tree>
             </field>
         </record>
+        <!-- Registro da visualização do calendário -->
+        <record model="ir.ui.view" id="steril_supervisorio_ciclos_calendar_view">
+            <field name="name">steril_supervisorio.ciclos.calendar</field>
+            <field name="model">steril_supervisorio.ciclos</field>
+            <field name="arch" type="xml">
+                <calendar string="Ciclos" 
+                    date_start="data_inicio" date_stop="data_fim"
+                    color="state"
+                    mode="week"
+                    create="false"
+                    delete="false"
+                     >
+                    <field name="name" string="Título do Evento" />
+                    
+                    <field name="supervisor" string="Supervisor" filters="True"/>
+                    <field name="operator" string="Operador" filters="True"/>
+                    <!-- Adicione mais campos conforme necessário -->
+                </calendar>
+               
+            </field>
+        </record>
+        <record model="ir.ui.view" id="steril_supervisorio_ciclos_graph_view">
+            <field name="name">steril_supervisorio.ciclos.graph</field>
+            <field name="model">steril_supervisorio.ciclos</field>
+            <field name="arch" type="xml">
+                <graph >
+                    
+                    
+                    <field name="duration" type="measure" string="Horas de Ciclo"/>
+                    <field name="data_inicio" type="row" group="day" interval="day" string="Data de Início"/>
+                      <field name="operator" type="col"/>
+                    
+                </graph>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="steril_supervisorio_ciclos_pivot_view">
+            <field name="name">steril_supervisorio.ciclos.pivot</field>
+            <field name="model">steril_supervisorio.ciclos</field>
+            <field name="arch" type="xml">
+                <pivot string="Resumo de Ciclos" disable_linking="True">
+                    <field name="data_inicio" type="row" interval="day" group="day"/>
+                    <field name="supervisor" type="col"/>
+                    <field name="operator" type="col"/>
+                    <field name="duration" type="measure" operator="sum" string="Duração Total"/>
+                </pivot>
+            </field>
+        </record>
+
+        
+        
+       
     </data>
 </odoo>

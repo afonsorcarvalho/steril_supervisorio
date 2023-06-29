@@ -24,7 +24,7 @@
                             <field name="date_end" string="Data de Leitura" 
                             attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico'))] }"
                             />
-                            <field name="indicador_biologico" />
+                            <field name="indicador_biologico" attrs="{'invisible':[('state_ciclo','not in',('finalizado'))],'required': [('state_ciclo','in',('finalizado'))]}"/>
                             <field name="resultado_bi" string="Resultado BI"  widget="radio" 
                             attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico'))],'required': [('state_ciclo','in',('esperando_biologico'))]}"
                             />

@@ -16,7 +16,7 @@ class StartIncubationWizard(models.TransientModel):
         )
     indicador_biologico = fields.Many2one(
         'steril_supervisorio.ciclos.indicador.biologico',
-        string='Lote BI', required=True
+        string='Lote BI'
         )
     resultado_bi = fields.Selection(selection = [('positivo','Positivo'),('negativo','Negativo')])
     state_ciclo = fields.Selection(string='Status', selection=[('iniciado', 'Iniciado'),

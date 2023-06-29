@@ -40,41 +40,38 @@
                             </div>
 
                         </div>
-                         <div class = "row">
+                         <div class = "row mt-3">
                             <div class="col-4">
-                               <strong>Resultado do Indicador Biológico: </strong>
+                            
+                               <h5>Indicador Biológico </h5>
                             </div>
-                            
-                            <!-- <t t-if="o.resultado_bi == 'negativo'"> -->
-                                
-                                <t t-set="colores" t-value="red" />
-                                
-                                
-                            <!-- </t> -->
-                            <!-- <t t-if="o.resultado_bi == 'Positivo'"> -->
-                                
-                                <!-- <t t-set="color" t-value="red" /> -->
-                                
-                            <!-- </t> -->
-                            
-                            <div class="col-2"  >
-                               <!-- <span t-field="o.resultado_bi" t-attf-style="color:{color}" /> -->
-                               
+                        </div>
+                        <div  class="row">
+                            <div class="col-2">
+                               <strong>Marca/Modelo/Lote: </strong>
+                            </div>
+                            <div class="col-4"  >
+                                <span t-field="o.marca_bi"/>                   
+                                <span t-field="o.modelo_bi"  />
+                                <span t-field="o.indicador_biologico"  />
+                            </div>
+                            <div class="col-2">
+                               <strong>Resultado: </strong>
+                            </div>
+                            <div class="col-4"  >
                                <t t-if="o.resultado_bi == 'positivo'">
                                 <span t-field="o.resultado_bi" t-attf-style="color:red;" />
                                </t>
                                <t t-if="o.resultado_bi == 'negativo'">
                                 <span t-field="o.resultado_bi" t-attf-style="color:green;" />
                                </t>
-                               
                             </div>
-                       </div>
-                        <div class="row mb-5">
-                           <div class="col-12 text-left"  >
-                            <img class="mr-5" t-attf-src="data:image/svg+xml;charset=utf-8;base64,{{o.grafico_ciclo}}" width="100%"/>
-                           </div>
                         </div>
                         <div class="row">
+                            
+                       </div>
+                        
+                        <div class="row mt-3">
                             <div class="col text-center">
                                 <table class="table table-condensed table-striped">
                                     <thead>
@@ -108,6 +105,9 @@
                                                 <td>
                                                     <span t-field="linha.pci_avg" t-options='{"widget": "float", "precision": 2}'/>
                                                 </td>
+                                                <!-- <td>
+                                                    <span t-field="linha.pci_freq" t-options='{"widget": "float", "precision": 2}'/>
+                                                </td> -->
                                                 <td>
                                                     <span t-field="linha.tci_max" t-options='{"widget": "float", "precision": 2}'/>
                                                     
@@ -120,12 +120,21 @@
                                                     <span t-field="linha.tci_avg" t-options='{"widget": "float", "precision": 2}'/>
                                                    
                                                 </td>
+                                                <!-- <td>
+                                                    <span t-field="linha.tci_freq" t-options='{"widget": "float", "precision": 2}'/>
+                                                   
+                                                </td> -->
                                             </tr>
                                         </t>
                                     </tbody>
                                 </table>
 
                             </div>
+                        </div>
+                        <div class="row mt-3 mb-5">
+                           <div class="col-12 text-left"  >
+                            <img class="mr-5" t-attf-src="data:image/svg+xml;charset=utf-8;base64,{{o.grafico_ciclo}}" width="100%"/>
+                           </div>
                         </div>
                       
                         <div class="row mt-5">

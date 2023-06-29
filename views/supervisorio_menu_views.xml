@@ -9,16 +9,17 @@
    <record model="ir.actions.act_window" id="steril_supervisorio.ciclos_action_window">
       <field name="name">Ciclos</field>
       <field name="res_model">steril_supervisorio.ciclos</field>
-      <field name="view_mode">tree,form</field>
+      <field name="view_mode">tree,form,calendar,pivot,graph</field>
     </record>
    <record model="ir.actions.act_window" id="steril_supervisorio.apelido_operador_action_window">
       <field name="name">Apelidos por Operador</field>
       <field name="res_model">steril_supervisorio.ciclos.apelidos.operador</field>
       <field name="view_mode">tree,form</field>
     </record>
+   
  <!-- Top menu item -->
 
-    <menuitem name="Supervisório" id="steril_supervisorio.menu_root" />
+    <menuitem name="Supervisório" id="steril_supervisorio.menu_root" web_icon="steril_supervisorio,static/description/icon.png"  />
 
     <!-- menu categories -->
 
