@@ -6,7 +6,6 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        
                         <button name="action_ler_diretorio" string="Ler diretorio"
                             class="oe_highlight" type="object" groups="base.group_no_one" />
                         <button name="get_chart_image" string="Atualiza Grafico"
@@ -32,7 +31,6 @@
                            
                             />
                     </header>
-
                     <sheet>
                         <div class="oe_button_box" name="button_box" />
                         <widget
@@ -160,6 +158,8 @@
                     <field name="state" />
                     <field name="operator" />
                     <field name="company_id" />
+                   
+                   
                     
                 </searchpanel>
             </field>
@@ -223,7 +223,7 @@
                     
                     
                     <field name="duration" type="measure" string="Horas de Ciclo"/>
-                    <field name="data_inicio" type="row" group="day" interval="day" string="Data de Início"/>
+                    <field name="data_inicio" type="row" interval="day" string="Data de Início"/>
                       <field name="operator" type="col"/>
                     
                 </graph>
@@ -234,7 +234,7 @@
             <field name="model">steril_supervisorio.ciclos</field>
             <field name="arch" type="xml">
                 <pivot string="Resumo de Ciclos" disable_linking="True">
-                    <field name="data_inicio" type="row" interval="day" group="day"/>
+                    <field name="data_inicio" type="row" interval="day" />
                     <field name="supervisor" type="col"/>
                     <field name="operator" type="col"/>
                     <field name="duration" type="measure" operator="sum" string="Duração Total"/>

@@ -197,7 +197,7 @@ class SupervisorioCiclos(models.Model):
         # _logger.info(f"Data original de modificação do arquivo {path_arquivo}: {data_modificacao}")
         # data_modificacao = fuso_horario.localize(data_ultima_atualizacao).astimezone(pytz.utc).replace(tzinfo=None)                 
         _logger.info(f"Data modificação do arquivo {path_arquivo}: {data_modificacao}")
-        if data_modificacao >= data_ultima_atualizacao:
+        if data_modificacao >= (data_ultima_atualizacao - timedelta(minutes=10)):
             _logger.info(f"A data {data_modificacao} é maior ou igual  {data_ultima_atualizacao}")
             return True
         else:
@@ -272,6 +272,7 @@ class SupervisorioCiclos(models.Model):
                                 'codigo_ciclo': codigo_ciclo,
                                 'data_inicio': data_inicio,
                                 'operator': operador_id,
+                                'company_id': equipment.company_id.id,
                                 'equipment': equipment.id or None,
                                 'path_file_ciclo_txt' : path_full_file,
                                 }
@@ -281,7 +282,7 @@ class SupervisorioCiclos(models.Model):
                             ciclo_existente.write({'path_file_ciclo_txt' : path_full_file})
                             ciclo=ciclo_existente
                         
-                        print(ciclo)
+                      
                         #if(ciclo and ciclo.state not in ['finalizado']):
                         if(ciclo):
                             ciclo.get_chart_image()
@@ -325,9 +326,9 @@ class SupervisorioCiclos(models.Model):
             valores2 = valores_fase['valores2']
             if len(valores1) > 0 and len(valores2) > 0:
                 contador_valores1 = Counter(valores1)
-                print(contador_valores1)
+                
                 contador_valores2 = Counter(valores2)
-                print(contador_valores2)
+                
                 valor_maior_frequencia1 = contador_valores1.most_common(1)[0][0]
                 valor_maior_frequencia2 = contador_valores2.most_common(1)[0][0]
 
@@ -487,11 +488,16 @@ class SupervisorioCiclos(models.Model):
         :param caminho_arquivo: Caminho completo do arquivo local a ser anexado com o nome do arquivo .
         :return: O objeto de anexo criado ou retorna false caso não exista o arquivo em pdf
         """
+
         caminho_arquivo = self.path_file_ciclo_txt.replace(".txt",".pdf")
-        with open(caminho_arquivo, 'rb') as arquivo:
-            nome_arquivo = os.path.basename(caminho_arquivo)
-            arquivo_binario = arquivo.read()
-            arquivo_base64 = base64.b64encode(arquivo_binario)
+        try:
+            with open(caminho_arquivo, 'rb') as arquivo:
+                nome_arquivo = os.path.basename(caminho_arquivo)
+                arquivo_binario = arquivo.read()
+                arquivo_base64 = base64.b64encode(arquivo_binario)
+        except:
+            _logger.info(f"Não foi possivel achar arquivo {caminho_arquivo}")
+            return
         # Verificar se o arquivo já está presente nos anexos
         
         existente = self._file_attachment_exist( nome_arquivo )
@@ -551,11 +557,11 @@ class SupervisorioCiclos(models.Model):
     
     
     
-    def passaram_24_horas(self,data_inicio):
+    def identifica_ciclo_incompleto(self,data_inicio):
         agora = fields.Datetime.now()
         diff = agora - data_inicio
 
-        if diff > timedelta(hours=24):
+        if diff > timedelta(hours=8):
             return True
         else:
             return False
@@ -571,7 +577,7 @@ class SupervisorioCiclos(models.Model):
                 if len(colunas) > 1:
                     if colunas[0] == 'Operador:':
 
-                        print(colunas)
+                        _logger.debug(colunas)
                         apelido_operador = self.env['steril_supervisorio.ciclos.apelidos.operador'].search([('name','=',colunas[1])])
                         if len(apelido_operador):
                             operador = apelido_operador[0].operador
@@ -610,7 +616,7 @@ class SupervisorioCiclos(models.Model):
                 'data_fim': self.data_inicio + tempo_fim_ciclo
             })
         else:
-            if self.passaram_24_horas(self.data_inicio):
+            if self.identifica_ciclo_incompleto(self.data_inicio):
                 self.write({
                     'state':'incompleto',
                     'data_fim': self.data_inicio + tempo_fim_ciclo
@@ -661,8 +667,8 @@ class SupervisorioCiclos(models.Model):
         #sanitizando dados
         dados_sanitizados = [x for x in dados if len(x)>2]
         segmentos_sanitizados = [x for x in segmentos if not x[1].startswith( 'PULSO')]
-        print(dados_sanitizados)
-        print(segmentos_sanitizados)
+        
+        
         # Criar uma lista de cores para os segmentos
         cores = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'gray']
         
@@ -682,7 +688,7 @@ class SupervisorioCiclos(models.Model):
         indices_fases = obter_faixas_indices_fases(dados,fases)
         if(len(indices_fases) > 1):
             indices_fases.append( [indices_fases[-1][1],len(dados_sanitizados)-1 ])
-        print(indices_fases)
+       
 
         # Configurar o gráfico com subplots
         fig, ax1 = plt.subplots(figsize=(21, 9))
@@ -748,6 +754,7 @@ class SupervisorioCiclos(models.Model):
         
 
     def action_ler_diretorio(self):
+        self.ler_diretorio_ciclos("ETO04")
         self.ler_diretorio_ciclos("ETO03")
         self.ler_diretorio_ciclos("ETO02")
 
