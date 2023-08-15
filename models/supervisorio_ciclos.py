@@ -600,6 +600,8 @@ class SupervisorioCiclos(models.Model):
         #lendo arquivo com os dados do ciclo
         
         dados,segmentos = self.ler_arquivo_dados(self.path_file_ciclo_txt)
+        if len(dados) == 0:
+            return
 
         tempos,tempo_total = self.monta_tempos_ciclo(segmentos)
         tempos_integer = {}
