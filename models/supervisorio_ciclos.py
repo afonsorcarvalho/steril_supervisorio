@@ -133,6 +133,19 @@ class SupervisorioCiclos(models.Model):
     grafico_ciclo = fields.Binary()
     motivo_reprovado = fields.Char()
 
+    document_count = fields.Char(compute='_compute_total_document_count',
+                                 string='Document Count',
+                                 help='Get the documents count')
+
+    @api.depends('document_count')
+    def _compute_total_document_count(self):
+        """Get the document count on smart tab"""
+        for record in self:
+            record.document_count = self.env[
+                'ir.attachment'].search_count(
+                [('res_id', '=', self.id), ('res_model', '=', 'steril_supervisorio.ciclos')])
+
+
     # plotly_chart = fields.Text(
     #     string='Plotly Chart',
     #     compute='_compute_plotly_chart',
@@ -233,7 +246,7 @@ class SupervisorioCiclos(models.Model):
         #lendo do diretorio que é atualizado pela IHMs dos equipamentos
         diretorio = f"/var/lib/odoo/filestore/{dbname}/ciclos/{equipment_alias}/" 
         equipment = self.env['engc.equipment'].search([('apelido','=like',equipment_alias )])
-        
+        _logger.info(f"O equipamento de apelido {equipment_alias}  agora é: {equipment}")
         for nome_pasta in os.listdir(diretorio):
             caminho_pasta = os.path.join(diretorio, nome_pasta)
             _logger.info(f"Lendo diretorio: {caminho_pasta}")
@@ -376,10 +389,7 @@ class SupervisorioCiclos(models.Model):
         is_finish, data_time_delta  = self.ler_fim_de_ciclo(dados,segmentos)
       
         return [is_finish,timedelta(seconds=data_time_delta.seconds)]
-       
-
-
-
+  
     def ler_arquivo_dados(self,file):
         """
         Lê um arquivo de dados e extrai as informações.
@@ -803,7 +813,19 @@ class SupervisorioCiclos(models.Model):
                         'default_reprovado': True,
                         }
         }
-       
+    
+    def action_ciclos_documents(self):
+        """Return the documents of corresponding ciclos """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Documentos',
+            'view_mode': 'kanban,form',
+            'res_model': 'ir.attachment',
+            'domain': [('res_id', '=', self.id),
+                       ('res_model', '=', 'steril_supervisorio.ciclos')],
+            'context': "{'create': True}"
+        }
 
 class SupervisorioCiclosIndicadorBiologico(models.Model):
     _name = 'steril_supervisorio.ciclos.indicador.biologico'

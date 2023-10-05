@@ -32,7 +32,16 @@
                             />
                     </header>
                     <sheet>
-                        <div class="oe_button_box" name="button_box" />
+                    
+                    
+                        <div class="oe_button_box" name="button_box" >
+                             <button class="oe_stat_button" type="object"
+                        name="action_ciclos_documents" string="Documentos"
+                        icon="fa-file-text-o">
+                    <field string="Documentos"
+                           name="document_count" widget="statinfo"/>
+                </button>
+                        </div>
                         <widget
                             name="web_ribbon"
                             text="Concluído"
@@ -60,21 +69,23 @@
                         </div>
                         <group>
                             <group>
-                                <field name="equipment" />
-                                <field name="supervisor" widget="many2one_avatar_employee" />
-                                <field name="operator" widget="many2one_avatar_employee" />
+                                <field name="equipment" 
+                                attrs = "{'readonly': [('state','not in',('draft'))]}" 
+                                />
+                                <field name="supervisor" widget="many2one_avatar_employee" attrs = "{'readonly': [('state','not in',('draft'))]}" />
+                                <field name="operator" widget="many2one_avatar_employee" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                
                             </group>
                             <group >
                                 <group>
-                                    <field name="data_inicio" />
+                                    <field name="data_inicio" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                     
                                 </group>
                                 <group>
-                                    <field name="data_fim" />
+                                    <field name="data_fim" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                 </group>
                                 <group>
-                                    <field name="duration" widget="float_time" />
+                                    <field name="duration" widget="float_time" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                 </group>
                                 
                             </group>
@@ -93,7 +104,7 @@
                                 <group>
                                 
                                     <field name="resultado_bi"  widget="radio" readonly="1"/>
-                                    <field name="indicador_biologico" />
+                                    <field name="indicador_biologico" attrs = "{'readonly': [('state','not in',('draft'))]}" />
                                     
                                 </group>
                                 <group>
@@ -116,7 +127,7 @@
                                         <field name="tci_avg" />
                                     </tree>
                                 </field>
-                                <field name="grafico_ciclo" widget="image" options='{"zoom": true}'/>
+                                <field name="grafico_ciclo" widget="image" options='{"zoom": true}' attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                  <!-- <div>
                                     <field name="plotly_chart" widget="plotly_chart" nolabel="1"/>
                                 </div> -->
