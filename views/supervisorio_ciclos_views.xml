@@ -130,7 +130,7 @@
                                 <field name="grafico_ciclo" widget="image" options='{"zoom": true}' attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                  <!-- <div>
                                     <field name="plotly_chart" widget="plotly_chart" nolabel="1"/>
-                                </div> -->
+                                </div>  -->
 
                     </sheet>
                     <div class="oe_chatter">

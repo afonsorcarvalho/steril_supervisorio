@@ -1,8 +1,8 @@
 from odoo import models, fields, api, _
 import io
 import base64
-from datetime import date, datetime,timedelta
-from dateutil import tz, parser
+from datetime import  datetime,timedelta
+from dateutil import  parser
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter
@@ -247,6 +247,8 @@ class SupervisorioCiclos(models.Model):
         diretorio = f"/var/lib/odoo/filestore/{dbname}/ciclos/{equipment_alias}/" 
         equipment = self.env['engc.equipment'].search([('apelido','=like',equipment_alias )])
         _logger.info(f"O equipamento de apelido {equipment_alias}  agora é: {equipment}")
+        #TODO modificar para ver se só os diretórios que tiveram atualização estejam na lista
+        
         for nome_pasta in os.listdir(diretorio):
             caminho_pasta = os.path.join(diretorio, nome_pasta)
             _logger.info(f"Lendo diretorio: {caminho_pasta}")
@@ -766,6 +768,8 @@ class SupervisorioCiclos(models.Model):
         
 
     def action_ler_diretorio(self):
+        #TODO ver se a data do diretório é maior que a data da ultima_atualizacao, atualizando somente máquinas que tiverem ciclos novos
+        
         self.ler_diretorio_ciclos("ETO04")
         self.ler_diretorio_ciclos("ETO03")
         self.ler_diretorio_ciclos("ETO02")
