@@ -165,14 +165,14 @@
                      <filter string="Data de Início" name="filter_date_range" context="{'group_by': 'data_inicio'}"/>
                    
                 </search>
-                <searchpanel>
+              <!--  <searchpanel>
                     <field name="state" />
                     <field name="operator" />
                     <field name="company_id" />
                    
                    
                     
-                </searchpanel>
+                </searchpanel> -->
             </field>
         </record>
         <record model="ir.ui.view" id="steril_supervisorio_ciclos_tree_view">
