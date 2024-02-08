@@ -710,7 +710,7 @@ class SupervisorioCiclos(models.Model):
             h,m,s = tempos[tempo]
             tempos_integer[tempo] = h + m/60 + s/(60*60)
         is_finish,tempo_fim_ciclo = self.get_data_time_fim_de_ciclo(dados,segmentos)
-       
+        _logger.debug(f"Ciclo finalizado: {is_finish}, tempo de fim de ciclo {tempo_fim_ciclo}")
         if(is_finish):
             
             self.write({
