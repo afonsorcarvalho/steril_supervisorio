@@ -384,9 +384,10 @@ class SupervisorioCiclos(models.Model):
                       
                         #if(ciclo and ciclo.state not in ['finalizado']):
                         if(ciclo):
-                           
+                           _logger.debug("Adicionando anexo em pdf")
                            # ciclo.get_chart_image()
                            ciclo.adicionar_anexo_pdf()
+                           _logger.debug("Atualizando dados ao banco")
                            ciclo.add_data_file_to_record()
 
         return True   
