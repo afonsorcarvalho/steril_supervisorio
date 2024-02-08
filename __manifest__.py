@@ -9,7 +9,7 @@
     'depends': ['base','engc_os','web','web_widget_plotly_chart','web_domain_field'],
     'sequence':-1,
     "qweb": [
-        "static/src/components/steril_supervisorio_dashboard_view/steril_supervisorio_daschboard_view.xml",
+        #"static/src/components/steril_supervisorio_dashboard_view/steril_supervisorio_daschboard_view.xml",
         # "static/src/xml/owl_tree_view.xml",
     ],
     'data': [
@@ -21,7 +21,7 @@
         'views/supervisorio_apelidos_operador_views.xml',
         'views/supervisorio_views.xml',
         'views/supervisorio_ciclos_views.xml',
-        'views/supervisorio_dashboard_views.xml',
+       # 'views/supervisorio_dashboard_views.xml',
         'views/supervisorio_menu_views.xml',
         'reports/supervisorio_ciclo_reports_template.xml',
         'reports/supervisorio_ciclo_reports.xml',

@@ -30,7 +30,7 @@
 
     <!-- actions -->
 
-    <menuitem name="Dashboard" id="steril_supervisorio.action_supervisorio_dashboard_ciclos" parent="steril_supervisorio.ciclos_menu" action="steril_supervisorio.dashboard_ciclos_action_client" />
+    <!-- <menuitem name="Dashboard" id="steril_supervisorio.action_supervisorio_dashboard_ciclos" parent="steril_supervisorio.ciclos_menu" action="steril_supervisorio.dashboard_ciclos_action_client" /> -->
     <menuitem name="Ciclos" id="steril_supervisorio.ciclos_list_menu" parent="steril_supervisorio.ciclos_menu" action="steril_supervisorio.ciclos_action_window" />
     <menuitem name="Apelidos Operador" id="steril_supervisorio.apelidos_operador_menu" parent="steril_supervisorio.configuracao_menu" action="steril_supervisorio.apelido_operador_action_window" />
   
