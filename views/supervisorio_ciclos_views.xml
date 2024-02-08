@@ -114,8 +114,8 @@
                                 
                             </group>
 
-                        <group string="Dados do Ciclo" ></group>
-                                <field name="fases" string= "Fases" nolabel="1" readonly="1">
+                        <!-- <group string="Dados do Ciclo" ></group> -->
+                                <!-- <field name="fases" string= "Fases" nolabel="1" readonly="1">
                                     <tree>
                                         <field name="name" string="Fase" />
                                         <field name="duration"  widget="float_time" />
@@ -126,7 +126,7 @@
                                         <field name="tci_max" />
                                         <field name="tci_avg" />
                                     </tree>
-                                </field>
+                                </field> -->
                                 <!-- <field name="grafico_ciclo" widget="image" options='{"zoom": true}' attrs = "{'readonly': [('state','not in',('draft'))]}"/> -->
                                 <group>
 
