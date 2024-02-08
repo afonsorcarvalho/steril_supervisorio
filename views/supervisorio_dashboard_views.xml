@@ -5,11 +5,11 @@
             <field name="name">steril_supervisorio.supervisorio.dashboard.view</field>
             <field name="model">steril_supervisorio.ciclos</field>
             <field name="arch" type="xml">
-                <ssDashboardView >
+                <!-- <ssDashboardView >
                     <div></div>
                     <field name="name"/>
                    
-                </ssDashboardView>
+                </ssDashboardView> -->
                
             </field>
         </record>
