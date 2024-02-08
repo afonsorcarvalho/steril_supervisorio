@@ -6,8 +6,12 @@ from dateutil import  parser
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter
-import plotly as plotly
+import plotly.graph_objects as go
+import plotly.offline as pyo
+from plotly.subplots import make_subplots
 
+
+from .cycle_statistics.eto_statistics import eto_statistics
 import json
 
 
@@ -88,6 +92,7 @@ class SupervisorioCiclos(models.Model):
     duration = fields.Float("Duração", compute = "_compute_duration",store=True)
     file = fields.Binary()
     modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
+    tipo_ciclo = fields.Char() # tipo do ciclo ex. Esterilização, Aeração, Leak-test, Tecidos ...
     indicador_biologico = fields.Many2one(
         'steril_supervisorio.ciclos.indicador.biologico',
         string='Lote BI',
@@ -106,6 +111,7 @@ class SupervisorioCiclos(models.Model):
     resultado_bi = fields.Selection(selection = [('positivo','Positivo'),('negativo','Negativo')])
     data_incubacao_bi = fields.Datetime(tracking=True)
     data_leitura_resultado_bi = fields.Datetime(tracking=True)
+
     def _get_default_supervisor(self):
         supervisor_default = self.env['ir.config_parameter'].sudo().get_param('steril_supervisorio.supervisor_ciclos')
         return self.env['hr.employee'].search([('id','=', supervisor_default)])
@@ -114,21 +120,19 @@ class SupervisorioCiclos(models.Model):
          string='Supervisor',
          comodel_name='hr.employee',
          default=_get_default_supervisor)
-        
     
     tempos_ciclo = fields.Html("Tempos do Ciclo")
     estatisticas_ciclo = fields.Html("Estatísticas do Ciclo")
     operator = fields.Many2one(
         string='Operador',
         comodel_name='hr.employee',
-        
     )
     path_file_ciclo_txt = fields.Char()
     equipment = fields.Many2one(
         string='Equipamento',
         comodel_name='engc.equipment'
-        
     )
+
     fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
     grafico_ciclo = fields.Binary()
     motivo_reprovado = fields.Char()
@@ -146,23 +150,100 @@ class SupervisorioCiclos(models.Model):
                 [('res_id', '=', self.id), ('res_model', '=', 'steril_supervisorio.ciclos')])
 
 
-    # plotly_chart = fields.Text(
-    #     string='Plotly Chart',
-    #     compute='_compute_plotly_chart',
+    plotly_chart = fields.Text(
+         string='Plotly Chart',
+         compute='_compute_plotly_chart',
         
-    # )
-    # def _compute_plotly_chart(self):
-    #     for rec in self:
-    #         rec.get_chart_image()
+     )
+    def _compute_plotly_chart(self):
         # for rec in self:
-        #     data = [{'x': [1, 2, 3], 'y': [2, 3, 4]}]
-        #     rec.plotly_chart = plotly.offline.plot(data,
-        #                                  include_plotlyjs=False,
-        #                                  output_type='div')
+        #     rec.get_chart_image()
+        for rec in self:
+            data_raw = self._get_cycle_data()
+            data = []
+            for d in data_raw:
+                data.append(( d['Hora'], float(d['PCI']), float(d['TCI']), float(d['UR'])) )
+
+            # data = [
+            #     ("10:37:22", -0.020, 50.00, 51),
+            #     ("10:37:55", -0.072, 49.80, 51),
+            #     ("10:38:29", -0.128, 49.50, 52),
+            #     ("10:39:01", -0.172, 49.50, 51),
+            #     ("10:39:33", -0.208, 49.40, 51),
+            #     ("10:40:05", -0.248, 49.30, 51),
+            #     ("10:40:37", -0.280, 49.20, 50),
+            #     ("10:41:09", -0.316, 49.20, 50),
+            #     ("10:41:41", -0.348, 49.20, 49),
+            #     ("10:42:14", -0.376, 49.20, 49),
+            #     ("10:42:46", -0.400, 49.20, 48),
+            #     ("10:43:19", -0.432, 49.20, 47),
+            #     ("10:43:49", -0.452, 49.30, 47),
+            #     ("10:44:22", -0.472, 49.30, 46),
+            #     ("10:44:54", -0.496, 49.30, 46),
+            #     ("10:45:26", -0.516, 49.30, 45),
+            #     ("10:45:59", -0.520, 49.40, 44),
+            #     ("10:46:29", -0.520, 49.50, 44),
+            #     ("10:47:01", -0.520, 49.60, 43),
+            #     ("10:47:33", -0.516, 49.80, 43),
+            #     ("10:48:07", -0.516, 50.00, 42),
+            #     ("10:48:39", -0.516, 50.10, 42),
+            #     ("10:49:11", -0.516, 50.30, 42),
+            #     ("10:49:43", -0.512, 50.30, 42),
+            #     ("10:50:15", -0.512, 50.50, 42),
+            #     ("10:50:47", -0.512, 50.60, 42),
+            #     ("10:51:19", -0.512, 50.70, 41),
+            #     ("10:51:50", -0.512, 50.80, 41),
+            #     ("10:52:22", -0.512, 50.90, 41),
+            #     ("10:52:53", -0.512, 50.90, 41),
+            #     ("10:53:25", -0.512, 51.00, 41),
+            #     ("10:53:58", -0.512, 51.20, 41),
+            #     ("10:54:30", -0.512, 51.30, 41),
+            #     ("10:55:03", -0.508, 51.30, 41),
+            #     ("10:55:35", -0.508, 51.40, 41)
+            # ]
+            # Separar os dados em listas
+            tempos = [item[0] for item in data]
+            valores1 = [item[1] for item in data]
+            valores2 = [item[2] for item in data]
+            valores3 = [item[3] for item in data]
+
+            # Criar os traces
+            trace1 = go.Scatter(x=tempos, y=valores1, mode='lines', name='Pressão', yaxis="y1")
+            trace2 = go.Scatter(x=tempos, y=valores2, mode='lines', name='Temperatura', yaxis="y2")
+            trace3 = go.Scatter(x=tempos, y=valores3, mode='lines', name='Umidade', yaxis="y2")
+
+
+            # Criar o layout
+            # Criar o layout
+            layout = go.Layout(
+                title='Gráfico do Ciclo ' + self.codigo_ciclo,
+                xaxis=dict(title='Hora'),
+                yaxis=dict(title='Pressão(Bar)', side='left', domain=[0, 1] ),
+                yaxis2=dict(title='ºC / UR% ', side='right', overlaying='y',domain=[0, 1]),
+                autosize=True,
+                legend=dict(title='Dados'),
+                width=1024,  # Largura da figura em pixels
+                height=800  # Altura da figura em pixels
+            )
+            # Criar a figura
+            fig = go.Figure( layout=layout)
+            fig.add_trace(trace1)
+            fig.add_trace(trace2)
+            fig.add_trace(trace3)
+           
+            
+            rec.plotly_chart = pyo.plot(fig, include_plotlyjs=False, output_type='div',)
 
     _sql_constraints = [('codigo_ciclo_equipment_unique', 'unique(codigo_ciclo, equipment)',
                          'Codigo de ciclo duplicado '
                          'Não é permitido')]
+    def _get_cycle_data(self):
+        statistics_cycle = eto_statistics()
+        statistics_cycle.set_filename(self.path_file_ciclo_txt)
+        data = statistics_cycle.extract_cycle_data()
+        _logger.debug(data)
+        return data
+    
     @api.depends('data_inicio', 'data_fim')
     def _compute_duration(self):
         for record in self:
@@ -174,7 +255,6 @@ class SupervisorioCiclos(models.Model):
                 record.duration = duration
             else:
                 record.duration = 0.0
-
    
     def verificar_conversao_tempo(self,string):
         try:
@@ -200,7 +280,7 @@ class SupervisorioCiclos(models.Model):
         data_ultima_atualizacao =  parser.parse(data_ultima_atualizacao_str).astimezone(pytz.utc)
               
         
-        _logger.info(f"Ultima Atualização: {data_ultima_atualizacao}")
+        _logger.debug(f"Ultima Atualização: {data_ultima_atualizacao}")
 
        
         timestamp_modificacao = os.path.getmtime(path_arquivo)
@@ -209,12 +289,12 @@ class SupervisorioCiclos(models.Model):
         
         # _logger.info(f"Data original de modificação do arquivo {path_arquivo}: {data_modificacao}")
         # data_modificacao = fuso_horario.localize(data_ultima_atualizacao).astimezone(pytz.utc).replace(tzinfo=None)                 
-        _logger.info(f"Data modificação do arquivo {path_arquivo}: {data_modificacao}")
+        _logger.debug(f"Data modificação do arquivo {path_arquivo}: {data_modificacao}")
         if data_modificacao >= (data_ultima_atualizacao - timedelta(minutes=10)):
-            _logger.info(f"A data {data_modificacao} é maior ou igual  {data_ultima_atualizacao}")
+            _logger.debug(f"A data {data_modificacao} é maior ou igual  {data_ultima_atualizacao}")
             return True
         else:
-            _logger.info(f"A data {data_modificacao} é menor que  {data_ultima_atualizacao}")
+            _logger.debug(f"A data {data_modificacao} é menor que  {data_ultima_atualizacao}")
             return False
         
     def convert_date_str_file_to_datetime(self,date_str):
@@ -246,23 +326,23 @@ class SupervisorioCiclos(models.Model):
         #lendo do diretorio que é atualizado pela IHMs dos equipamentos
         diretorio = f"/var/lib/odoo/filestore/{dbname}/ciclos/{equipment_alias}/" 
         equipment = self.env['engc.equipment'].search([('apelido','=like',equipment_alias )])
-        _logger.info(f"O equipamento de apelido {equipment_alias}  agora é: {equipment}")
+        _logger.debug(f"O equipamento de apelido {equipment_alias}  agora é: {equipment}")
         #TODO modificar para ver se só os diretórios que tiveram atualização estejam na lista
         
         for nome_pasta in os.listdir(diretorio):
             caminho_pasta = os.path.join(diretorio, nome_pasta)
-            _logger.info(f"Lendo diretorio: {caminho_pasta}")
+            _logger.debug(f"Lendo diretorio: {caminho_pasta}")
            
           
             if os.path.isdir(caminho_pasta):
 
                 codigo_carga = nome_pasta
                 lista_de_arquivos = os.listdir(caminho_pasta)
-                _logger.info(f"Lista de arquivo do diretorio: {lista_de_arquivos}")
+                _logger.debug(f"Lista de arquivo do diretorio: {lista_de_arquivos}")
 
                 # filtrando apenas os arquivos tipo txt
                 lista_de_arquivos_txt = [arquivo for arquivo in lista_de_arquivos if arquivo.endswith('txt')]
-                _logger.info(f"Lista de arquivos encontrada: {lista_de_arquivos_txt}") 
+                _logger.debug(f"Lista de arquivos encontrada: {lista_de_arquivos_txt}") 
                 for arquivo in lista_de_arquivos_txt:  
                     path_full_file = caminho_pasta+'/'+arquivo
                    
@@ -270,18 +350,22 @@ class SupervisorioCiclos(models.Model):
                         arquivo_partes = arquivo.split('_')
                         data_hora_inicio_str = arquivo_partes[1] + ' ' + arquivo_partes[2].replace('.txt', '')
                         codigo_ciclo = arquivo.replace('.txt','')
-                        
+                        _logger.debug(f"codigo_ciclo: {codigo_ciclo}")
                         # Converter a data e hora para o formato datetime
                         data_inicio = self.convert_date_str_file_to_datetime(data_hora_inicio_str)
+                        _logger.debug(f"data_inicio: {data_inicio}")
                         # Verificar se o código de ciclo já existe no modelo
                         ciclo_existente = self.env['steril_supervisorio.ciclos'].search([('codigo_ciclo', '=', codigo_ciclo)])
-                        _logger.debug(ciclo_existente)
+                        if ciclo_existente:
+                            _logger.debug(f"Ciclo {ciclo_existente.name} já existente no banco de dados")
+                        else:
+                            _logger.debug(f'Nenhum ciclo no banco cadastrado')
                         if len(ciclo_existente) < 1: #não existe ciclo
-                            
-                            operador_id = self._ler_arquivo_operador(path_full_file)
-                            # procurando equipamento pelo apelido
-
-                            #    Criar um novo registro para o código de ciclo
+                            header = self.get_header_fita(path_full_file)
+                            operador_id = self._ler_arquivo_operador(header)
+                            _logger.debug(f'Operador:{operador_id}')
+                           
+                           
                             ciclo = self.env['steril_supervisorio.ciclos'].create({
                                 'name': codigo_carga,
                                 'codigo_ciclo': codigo_ciclo,
@@ -300,11 +384,22 @@ class SupervisorioCiclos(models.Model):
                       
                         #if(ciclo and ciclo.state not in ['finalizado']):
                         if(ciclo):
-                            ciclo.get_chart_image()
-                            ciclo.adicionar_anexo_pdf()
-                            ciclo.add_data_file_to_record()
+                           pass
+                           # ciclo.get_chart_image()
+                           ciclo.adicionar_anexo_pdf()
+                           # ciclo.add_data_file_to_record()
 
         return True   
+    def get_header_fita(self, path_file_name):
+        statistics = eto_statistics()
+        statistics.set_filename(path_file_name)
+        data = statistics.extract_header_cycle_sterilization()
+        _logger.debug(statistics)
+        _logger.debug(data)
+        return data
+
+
+
     # def _sanitiza_dados(self,dados):
     #     dados_sanitizados = []
     #     for linha in dados:
@@ -578,22 +673,14 @@ class SupervisorioCiclos(models.Model):
         else:
             return False
         
-    def _ler_arquivo_operador(self,file):
-        with open(file, 'r') as arquivo:
-            linhas = arquivo.readlines()
-  
-            for linha in linhas:
-                colunas = re.split('\s+', linha)
-                colunas = [valor for valor in colunas if valor]
-               
-                if len(colunas) > 1:
-                    if colunas[0] == 'Operador:':
-
-                        _logger.debug(colunas)
-                        apelido_operador = self.env['steril_supervisorio.ciclos.apelidos.operador'].search([('name','=',colunas[1])])
-                        if len(apelido_operador):
-                            operador = apelido_operador[0].operador
-                            return operador.id
+    def _ler_arquivo_operador(self,header):
+        
+        _logger.debug(header)
+        operador = header['Operador'] 
+        apelido_operador = self.env['steril_supervisorio.ciclos.apelidos.operador'].search([('name','=',operador)])
+        if len(apelido_operador):
+            operador = apelido_operador[0].operador
+            return operador.id
                         
     def atualiza_parametro_ultima_atualizacao(self):
         date = datetime.now(fuso_horario)
@@ -695,8 +782,8 @@ class SupervisorioCiclos(models.Model):
 
         # data = [{'y': pci},{'y': tci}]
         # self.plotly_chart = plotly.offline.plot(data,
-        #                                   include_plotlyjs=False,
-        #                                   output_type='div')
+        #                                    include_plotlyjs=False,
+        #                                    output_type='div')
         
         fases = [item[1] for item in segmentos_sanitizados]
         indices_fases = obter_faixas_indices_fases(dados,fases)
@@ -770,9 +857,10 @@ class SupervisorioCiclos(models.Model):
     def action_ler_diretorio(self):
         #TODO ver se a data do diretório é maior que a data da ultima_atualizacao, atualizando somente máquinas que tiverem ciclos novos
         
-        self.ler_diretorio_ciclos("ETO04")
-        self.ler_diretorio_ciclos("ETO03")
-        self.ler_diretorio_ciclos("ETO02")
+        # self.ler_diretorio_ciclos("ETO04")
+        # self.ler_diretorio_ciclos("ETO03")
+        # self.ler_diretorio_ciclos("ETO02")
+        self.ler_diretorio_ciclos("ETO01")
 
     def action_inicia_incubacao(self):
         return {

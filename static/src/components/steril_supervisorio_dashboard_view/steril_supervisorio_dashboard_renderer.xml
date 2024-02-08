@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates xml:space="preserve">
+    <t t-name="steril_supervisorio.DashboardRenderer" owl="1">
+        <t t-esc="props.propsYouWant"/>
+        <t t-foreach="props.records" t-as="record" t-key="record.id">
+            <div>
+                
+                <t t-esc="record.name" />
+                
+            </div>
+        </t>
+    </t>
+</templates>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="steril_supervisorio.DashboardCiclos" owl="1">
+        <ControlPanel display="{ 'bottom' : false,'top-right':false,'top-left':true }">
+           <!-- <t t-set-slot="control-panel-bottom-left-buttons">
+            <nav class="btn-group o_cp_switch_buttons">
+               <select class="form-select o_switch_view" t-model="state.period" t-on-change="onChangePeriod">
+                   <option value="0">Period</option>
+                   <option value="7">Last 7 Days</option>
+                   <option value="30">Last 30 Days</option>
+                   <option value="90">Last 90 Days</option>
+                   <option value="365">Last 365 Days</option>
+               </select>
+            </nav>
+               
+           </t> -->
+            <t t-set-slot="control-panel-bottom-right"> 
+               <nav class="btn-group o_cp_switch_buttons">
+                <select class="form-select" t-model="state.period" t-on-change="onChangePeriod">
+                    <option value="0">Equipamento</option>
+                    <option value="7">Last 7 Days</option>
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last 365 Days</option>
+                </select>
+            </nav>
+            </t> 
+        </ControlPanel> 
+     
+        <div class="dashboard-ciclos-container container ">
+            
+            
+            <h1 class="text-primary fw-bold"></h1>
+            <div class="row">
+                <div class="col m-0 p-0">
+                    <div class="shadow-sm border m-2 p-4 bg-white">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h1 class="text-primary fw-bold">Dashboard Ciclos</h1>
+                            <!-- <div>
+                                <select class="form-select" t-model="state.period" t-on-change="onChangePeriod">
+                                    <option value="0">Period</option>
+                                    <option value="7">Last 7 Days</option>
+                                    <option value="30">Last 30 Days</option>
+                                    <option value="90">Last 90 Days</option>
+                                    <option value="365">Last 365 Days</option>
+                                </select>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row ">
+                <!-- <div class="row align-items-center"> -->
+                    
+
+                    <KpiCard name="'Em andamento'" onClick.bind = "goActionCiclosAndamento" caraio="state.ciclos['em_andamento'].key"  value="state.ciclos['em_andamento'].value" percentage="state.ciclos['em_andamento'].percentage"  />
+                    
+                    <KpiCard name="'Incompletos'" onClick.bind = "goActionCiclosIncompleto" value="state.ciclos['incompleto'].value" percentage="state.ciclos['incompleto'].percentage"/>
+                    <KpiCard name="'Finalizados'" onClick.bind = "goActionCiclosFinalizados" value="state.ciclos['finalizado'].value" percentage="state.ciclos['finalizado'].percentage"/>
+                    <KpiCard name="'Concluídos'" onClick.bind = "goActionCiclosConcluidos" value="state.ciclos['concluido'].value" percentage="state.ciclos['concluido'].percentage"/>
+                    <KpiCard name="'Esperando resultado'" onClick.bind = "goActionCiclosEsperandoResultados" value="state.ciclos['esperando_biologico'].value" percentage="state.ciclos['esperando_biologico'].percentage"/>
+                    <KpiCard name="'Reprovado'" onClick.bind = "goActionCiclosReprovado" value="state.ciclos['reprovado'].value" percentage="state.ciclos['reprovado'].percentage"/>
+                <!-- </div> -->
+                
+            </div>
+            <div class="row">
+                <div class="col-lg-6 m-0 p-0">
+                    <div class="shadow-sm border m-2 p-4 bg-white">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h3 class="text-primary fw-bold">Ciclo 23412</h3>
+                            <div class="px-3 py-1 bg-primary cursor-pointer">
+                                <span class="fa fa-arrow-right text-white"/>
+                            </div>
+                        </div>
+                        <ChartRenderer type="'line'" title="'Ciclo 23412'"/>
+                    </div>
+                </div>
+                <div class="col-lg-6 m-0 p-0">
+                    <div class="shadow-sm border m-2 p-4 bg-white">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h3 class="text-primary fw-bold">Ciclo 23413</h3>
+                            <div class="px-3 py-1 bg-primary cursor-pointer">
+                                <span class="fa fa-arrow-right text-white"/>
+                            </div>
+                        </div>
+                        <ChartRenderer type="'line'" title="'Ciclo 23413'"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    </t>
+</templates>

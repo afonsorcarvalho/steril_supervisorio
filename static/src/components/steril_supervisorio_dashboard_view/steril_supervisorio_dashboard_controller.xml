@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates>
+    <t t-name="steril_supervisorio.DashboardController" owl="1">
+        <Layout display="props.display" className="'h-100 overflow-auto'">
+            <t t-component="props.Renderer" records="model.records" propsYouWant="'Hello world'"/>
+        </Layout>
+            
+        
+    </t>
+</templates>
+<!-- <templates xml:space="preserve">
+
+    <div t-name="steril_supervisorio.DashboardRenderer" class="o_owl_tree_view" owl="1">
+        <div class="d-flex p-2 flex-row ss-dashboard-root">
+          
+            <div class="list-group">
+                <t t-foreach="props.items" t-as="item">
+                    
+                </t>
+            </div>
+        </div>
+    </div>
+
+</templates> -->

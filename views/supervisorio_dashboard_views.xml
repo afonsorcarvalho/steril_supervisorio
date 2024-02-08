@@ -1,0 +1,30 @@
+
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="steril_supervisorio_dashboard_view">
+            <field name="name">steril_supervisorio.supervisorio.dashboard.view</field>
+            <field name="model">steril_supervisorio.ciclos</field>
+            <field name="arch" type="xml">
+                <ssDashboardView fieldFromTheArch="steril_supervisorio.ciclos">
+                    <div>ai dentro</div>
+                    <field name="name"/>
+                   
+                </ssDashboardView>
+               
+            </field>
+        </record>
+        
+        <record id="dashboard_ciclos_action" model="ir.actions.act_window">
+            <field name="name">Dashboard Ciclos</field>
+            <field name="res_model">steril_supervisorio.ciclos</field>
+          
+            <field name="view_mode">form</field>
+        </record>
+        <record id="dashboard_ciclos_action_client" model="ir.actions.client">
+            <field name="name">Dashboard Ciclos</field>
+            <field name="tag">steril_supervisorio.action_dashboard_ciclos</field>
+            
+        </record>
+        
+    </data>
+</odoo>
