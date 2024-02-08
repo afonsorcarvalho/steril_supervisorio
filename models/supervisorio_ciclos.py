@@ -698,9 +698,10 @@ class SupervisorioCiclos(models.Model):
     def add_data_file_to_record(self):
         
         #lendo arquivo com os dados do ciclo
-        
+        _logger.debug(f"Entrando na add_data_file_to_record")
         dados,segmentos = self.ler_arquivo_dados(self.path_file_ciclo_txt)
         if len(dados) == 0:
+            _logger.debug(f"nenhum dado lido, saindo")
             return
 
         tempos,tempo_total = self.monta_tempos_ciclo(segmentos)
