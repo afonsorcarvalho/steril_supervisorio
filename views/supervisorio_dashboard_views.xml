@@ -5,8 +5,8 @@
             <field name="name">steril_supervisorio.supervisorio.dashboard.view</field>
             <field name="model">steril_supervisorio.ciclos</field>
             <field name="arch" type="xml">
-                <ssDashboardView fieldFromTheArch="steril_supervisorio.ciclos">
-                    <div>ai dentro</div>
+                <ssDashboardView >
+                    <div></div>
                     <field name="name"/>
                    
                 </ssDashboardView>

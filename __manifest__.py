@@ -6,7 +6,7 @@
     'summary': 'Supervisório das máquinas de Limpeza e esterilização da Steriliza Corporation',
     'description': 'Descrição detalhada do módulo',
     'author': 'Afonso Carvalho',
-    'depends': ['base','engc_os','web'],
+    'depends': ['base','engc_os','web','web_widget_plotly_chart'],
     'sequence':-1,
     "qweb": [
         "static/src/components/steril_supervisorio_dashboard_view/steril_supervisorio_daschboard_view.xml",
