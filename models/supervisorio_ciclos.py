@@ -384,12 +384,13 @@ class SupervisorioCiclos(models.Model):
                       
                         #if(ciclo and ciclo.state not in ['finalizado']):
                         if(ciclo):
-                           pass
+                           
                            # ciclo.get_chart_image()
                            ciclo.adicionar_anexo_pdf()
-                           # ciclo.add_data_file_to_record()
+                           ciclo.add_data_file_to_record()
 
         return True   
+    
     def get_header_fita(self, path_file_name):
         statistics = eto_statistics()
         statistics.set_filename(path_file_name)
