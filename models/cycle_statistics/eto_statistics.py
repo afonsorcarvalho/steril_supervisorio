@@ -138,7 +138,7 @@ class eto_statistics():
     def extract_data_sterilization(self):
         data = self.extract_data_between_events('ESTERILIZACAO','LAVAGEM')
         return data
-    def dados_desde_pressao_limite(dados, pressao_limite):
+    def dados_desde_pressao_limite(self,dados, pressao_limite):
         """Returns data from a specified point where the PCI pressure reaches or exceeds a limit.
 
             Args:
@@ -155,8 +155,9 @@ class eto_statistics():
         # Encontrar o índice onde a pressão PCI atinge ou ultrapassa o limite
         indice_inicio = None
         for i, dado in enumerate(dados):
-            if float(dado['PCI'])>= pressao_limite:
+            if float(dado['PCI']) >=  pressao_limite:
                 indice_inicio = i
+                #print(indice_inicio)
                 break
 
         # Se não encontrar nenhum ponto acima do limite, retornar uma lista vazia
@@ -165,7 +166,98 @@ class eto_statistics():
 
         # Retornar os dados a partir do índice encontrado
         return dados[indice_inicio:]
+    
+    def calculate_metrics(self,data, time_interval):
+        from datetime import datetime, timedelta
+        
+        # Convert the time interval to seconds
+        time_interval_seconds = time_interval * 60
+        
+        # Convert the data times to datetime objects
+        data_times = [datetime.strptime(entry['Hora'], '%H:%M:%S') for entry in data]
+        print(data_times)
+        # Initialize lists to store values within the time interval
+        pci_values = []
+        tci_values = []
+        ur_values = []
+        
+        # Initialize variables for total sum
+        total_pci = 0
+        total_tci = 0
+        total_ur = 0
+        
+        # Initialize variables for min and max
+        min_pci = float('inf')
+        min_tci = float('inf')
+        min_ur = float('inf')
+        max_pci = float('-inf')
+        max_tci = float('-inf')
+        max_ur = float('-inf')
+        
+        # Initialize a variable to count entries within the time interval
+        count_entries = 0
+        
+        # Loop through the data and calculate metrics
+        for i, entry in enumerate(data):
+            # Get the current time and calculate the difference from the start time
+            current_time = data_times[i]
+            time_difference = current_time - data_times[0]
+            
+            # # If the time difference is within the interval, update metrics
+            # if time_difference.total_seconds() <= time_interval_seconds:
+            #     count_entries += 1
+                
+            # Convert string values to float
+            pci = float(entry['PCI'])
+            tci = float(entry['TCI'])
+            ur = float(entry['UR'])
+            
+            # Add values to lists
+            pci_values.append(pci)
+            tci_values.append(tci)
+            ur_values.append(ur)
+            
+            # Update total sum
+            total_pci += pci
+            total_tci += tci
+            total_ur += ur
+            
+            # Update min and max values
+            min_pci = min(min_pci, pci)
+            min_tci = min(min_tci, tci)
+            min_ur = min(min_ur, ur)
+            max_pci = max(max_pci, pci)
+            max_tci = max(max_tci, tci)
+            max_ur = max(max_ur, ur)
+          
+                
+        # Calculate average values
+        avg_pci = total_pci / count_entries if count_entries > 0 else 0
+        avg_tci = total_tci / count_entries if count_entries > 0 else 0
+        avg_ur = total_ur / count_entries if count_entries > 0 else 0
+        
+        # Return metrics
+        return {
+            'PCI': {'min': min_pci,'max': max_pci,'avg': avg_pci},
+            'TCI': {'min': min_tci,'max': max_tci,'avg': avg_tci},
+            'UR': {'min': min_ur,'max': max_ur,'avg': avg_ur},
+        
+        }
+
+    
+
 
 # t = eto_statistics()
 # t.set_filename("060224-01_20240206_131429.txt")
-# print(t.extract_cycle_data())
+# data = t.extract_data_sterilization()
+# data_sterilization = t.dados_desde_pressao_limite(data,-0.180)
+# data_statistics = t.calculate_metrics(data_sterilization, 5)
+# print(data_statistics)
+
+
+
+# data_statistics = t.calculate_metrics(data_sterilization, 120)
+# print(data_statistics)
+# data_statistics = t.calculate_metrics(data_sterilization, 235)
+
+# print(data_statistics)

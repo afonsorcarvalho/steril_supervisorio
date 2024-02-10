@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 import plotly.graph_objects as go
 import plotly.offline as pyo
-from plotly.subplots import make_subplots
+import plotly.io as pio
 
 
 from .cycle_statistics.eto_statistics import eto_statistics
@@ -159,84 +159,93 @@ class SupervisorioCiclos(models.Model):
         # for rec in self:
         #     rec.get_chart_image()
         for rec in self:
-            data_raw = self._get_cycle_data()
-            data = []
-            for d in data_raw:
-                data.append(( d['Hora'], float(d['PCI']), float(d['TCI']), float(d['UR'])) )
-
-            # data = [
-            #     ("10:37:22", -0.020, 50.00, 51),
-            #     ("10:37:55", -0.072, 49.80, 51),
-            #     ("10:38:29", -0.128, 49.50, 52),
-            #     ("10:39:01", -0.172, 49.50, 51),
-            #     ("10:39:33", -0.208, 49.40, 51),
-            #     ("10:40:05", -0.248, 49.30, 51),
-            #     ("10:40:37", -0.280, 49.20, 50),
-            #     ("10:41:09", -0.316, 49.20, 50),
-            #     ("10:41:41", -0.348, 49.20, 49),
-            #     ("10:42:14", -0.376, 49.20, 49),
-            #     ("10:42:46", -0.400, 49.20, 48),
-            #     ("10:43:19", -0.432, 49.20, 47),
-            #     ("10:43:49", -0.452, 49.30, 47),
-            #     ("10:44:22", -0.472, 49.30, 46),
-            #     ("10:44:54", -0.496, 49.30, 46),
-            #     ("10:45:26", -0.516, 49.30, 45),
-            #     ("10:45:59", -0.520, 49.40, 44),
-            #     ("10:46:29", -0.520, 49.50, 44),
-            #     ("10:47:01", -0.520, 49.60, 43),
-            #     ("10:47:33", -0.516, 49.80, 43),
-            #     ("10:48:07", -0.516, 50.00, 42),
-            #     ("10:48:39", -0.516, 50.10, 42),
-            #     ("10:49:11", -0.516, 50.30, 42),
-            #     ("10:49:43", -0.512, 50.30, 42),
-            #     ("10:50:15", -0.512, 50.50, 42),
-            #     ("10:50:47", -0.512, 50.60, 42),
-            #     ("10:51:19", -0.512, 50.70, 41),
-            #     ("10:51:50", -0.512, 50.80, 41),
-            #     ("10:52:22", -0.512, 50.90, 41),
-            #     ("10:52:53", -0.512, 50.90, 41),
-            #     ("10:53:25", -0.512, 51.00, 41),
-            #     ("10:53:58", -0.512, 51.20, 41),
-            #     ("10:54:30", -0.512, 51.30, 41),
-            #     ("10:55:03", -0.508, 51.30, 41),
-            #     ("10:55:35", -0.508, 51.40, 41)
-            # ]
-            # Separar os dados em listas
-            tempos = [item[0] for item in data]
-            valores1 = [item[1] for item in data]
-            valores2 = [item[2] for item in data]
-            valores3 = [item[3] for item in data]
-
-            # Criar os traces
-            trace1 = go.Scatter(x=tempos, y=valores1, mode='lines', name='Pressão', yaxis="y1")
-            trace2 = go.Scatter(x=tempos, y=valores2, mode='lines', name='Temperatura', yaxis="y2")
-            trace3 = go.Scatter(x=tempos, y=valores3, mode='lines', name='Umidade', yaxis="y2")
-
-
-            # Criar o layout
-            # Criar o layout
-            layout = go.Layout(
-                title='Gráfico do Ciclo ' + self.codigo_ciclo,
-                xaxis=dict(title='Hora'),
-                yaxis=dict(title='Pressão(Bar)', side='left', domain=[0, 1] ),
-                yaxis2=dict(title='ºC / UR% ', side='right', overlaying='y',domain=[0, 1]),
-                autosize=True,
-                legend=dict(title='Dados'),
-                width=1024,  # Largura da figura em pixels
-                height=800  # Altura da figura em pixels
-            )
-            # Criar a figura
-            fig = go.Figure( layout=layout)
-            fig.add_trace(trace1)
-            fig.add_trace(trace2)
-            fig.add_trace(trace3)
-           
-            
+            fig = rec.mount_fig_chart()
             rec.plotly_chart = pyo.plot(fig, include_plotlyjs=False, output_type='div',)
+            
+            #bin_image = pio.to_image(fig, format='svg')
+            
+            
+            
+            
+            
+            
+            
+            # Retornar os dados da imagem
+            #self.grafico_ciclo = base64.b64encode(buffer.read())
+            #rec.grafico_ciclo = base64.b64encode(bin_image)
 
     _sql_constraints = [('codigo_ciclo_equipment_unique', 'unique(codigo_ciclo, equipment)',
                          'Codigo de ciclo duplicado '
                          'Não é permitido')]
+    
+    def mount_fig_chart(self):
+        data_raw = self._get_cycle_data()
+        data = []
+        for d in data_raw:
+            data.append(( d['Hora'], float(d['PCI']), float(d['TCI']), float(d['UR'])) )
+
+        
+        # Separar os dados em listas
+        tempos = [item[0] for item in data]
+        valores1 = [item[1] for item in data]
+        valores2 = [item[2] for item in data]
+        valores3 = [item[3] for item in data]
+
+        # Criar os traces
+        trace1 = go.Scatter(x=tempos, y=valores1, mode='lines', name='Pressão (bar)', yaxis="y1")
+        trace2 = go.Scatter(x=tempos, y=valores2, mode='lines', name='Temperatura (ºC)', yaxis="y2")
+        trace3 = go.Scatter(x=tempos, y=valores3, mode='lines', name='Umidade (UR%)', yaxis="y2")
+
+        # Criar o layout
+        layout = go.Layout(
+            title='Gráfico do Ciclo ' + self.codigo_ciclo,
+            xaxis=dict(title='Hora'),
+            yaxis=dict(title='Pressão(Bar)', side='left', domain=[0, 1] ),
+            yaxis2=dict(title='ºC / UR% ', side='right', overlaying='y',domain=[0, 1]),
+            autosize=True,
+            legend=dict(title='Dados'),
+            
+            width=1024,  # Largura da figura em pixels
+            height=800  # Altura da figura em pixels
+        )
+        # Criar a figura
+        umidade_5 = ['21:58:47',55]
+        umidade_120 = ['23:53:33',64]
+        umidade_235 = ['01:20:52',64]
+        pontos_marcar = [umidade_5,umidade_120,umidade_235]
+        # Limites da zona a ser marcada
+        zone_x = ['21:32:37', '01:32:45']  # Intervalo de x para a zona
+        zone_y_lower = [0, 0]  # Limite inferior da zona para cada ponto x
+        zone_y_upper = [100, 100]  # Limite superior da zona para cada ponto x
+            
+        fig = go.Figure( layout=layout)
+        fig.add_trace(trace1)
+        fig.add_trace(trace2)
+        fig.add_trace(trace3)
+        for p in pontos_marcar:
+
+            fig.add_trace(go.Scatter(x=[p[0]],
+                                    y=[p[1]], mode='markers', 
+                                    
+                                    yaxis="y2",
+                                    
+                                    marker=dict(color='black', size=10,symbol='circle-open'),
+                                    textposition='top center', showlegend=False,
+                                    ))
+            fig.add_trace(go.Scatter(x=[p[0]], y=[p[1]+1],yaxis="y2",textposition='top center', mode='text', text=[f"{p[1]} %"], showlegend=False))
+        # Adicionando a zona de esterilização
+        fig.add_trace(go.Scatter(x=zone_x + zone_x[::-1],  # Criando uma linha fechada conectando os pontos
+                        y=zone_y_lower + zone_y_upper[::-1],  # Adicionando os limites inferior e superior
+                        fill='toself',  # Preenchendo a área entre as linhas
+                        fillcolor='rgba(255, 255, 0, 0.2)',  # Cor do preenchimento (verde com transparência)
+                        line=dict(color='rgba(0, 0, 0, 0)'),  # Escondendo a linha de contorno
+                        name='Esterilização',
+                        yaxis="y2",text="ESTERILIZAÇÃO"
+                        
+                        ))
+        
+        return fig
+
     def _get_cycle_data(self):
         statistics_cycle = eto_statistics()
         statistics_cycle.set_filename(self.path_file_ciclo_txt)
@@ -384,8 +393,9 @@ class SupervisorioCiclos(models.Model):
                       
                         #if(ciclo and ciclo.state not in ['finalizado']):
                         if(ciclo):
+                           _logger.debug("Adicionando imagem do grafico")
+                           ciclo.set_chart_image()
                            _logger.debug("Adicionando anexo em pdf")
-                           # ciclo.get_chart_image()
                            ciclo.adicionar_anexo_pdf()
                            _logger.debug("Atualizando dados ao banco")
                            ciclo.add_data_file_to_record()
@@ -406,6 +416,22 @@ class SupervisorioCiclos(models.Model):
     #     dados_sanitizados = []
     #     for linha in dados:
     #         if len(linha) > 1:
+    def _calcular_estatisticas_por_tempo_esterilizacao(self):
+        t = eto_statistics()
+        t.set_filename(self.path_file_ciclo_txt)
+        data = t.extract_data_sterilization()
+        data_sterilization = t.dados_desde_pressao_limite(data,-0.180)
+        data_statistics_5 = t.calculate_metrics(data_sterilization, 5) # Pegando dos primeiros cinco minutos
+        data_statistics_120 = t.calculate_metrics(data_sterilization, 120) # Pegando dos 120 min
+        data_statistics_235 = t.calculate_metrics(data_sterilization, 235) # Pegando dos 235 min
+        return {
+            'ESTERILIZAÇÃO 5 MIN': data_statistics_5,
+            'ESTERILIZAÇÃO 120 MIN':data_statistics_120,
+            'ESTERILIZAÇÃO 235 MIN':data_statistics_235,
+
+        }
+
+
 
     def _calcular_estatisticas_por_fase(self,dados):
         estatisticas = {}
@@ -730,7 +756,9 @@ class SupervisorioCiclos(models.Model):
                     'state':'em_andamento'
                 })
 
-        estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
+        #estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
+        #estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
+        estatisticas_finais = self._calcular_estatisticas_por_tempo_esterilizacao()
         self.estatisticas_ciclo = json.dumps(estatisticas_finais)
         sequence = 1
 
@@ -741,14 +769,17 @@ class SupervisorioCiclos(models.Model):
                    
                     'ciclo': self.id,
                     'duration': tempos_integer.get(fase_key) ,
-                    'pci_min': estatisticas_finais[fase_key]['valor_minimo1'],
-                    'pci_max': estatisticas_finais[fase_key]['valor_maximo1'],
-                    'pci_avg': estatisticas_finais[fase_key]['media1'],
-                    'pci_freq': estatisticas_finais[fase_key]['valor_maior_frequencia1'],
-                    'tci_min': estatisticas_finais[fase_key]['valor_minimo2'],
-                    'tci_max': estatisticas_finais[fase_key]['valor_maximo2'],
-                    'tci_avg': estatisticas_finais[fase_key]['media2'],
-                    'tci_freq': estatisticas_finais[fase_key]['valor_maior_frequencia2'],
+                    'pci_min': estatisticas_finais[fase_key]['PCI']['min'],
+                    'pci_max': estatisticas_finais[fase_key]['PCI']['max'],
+                    'pci_avg': estatisticas_finais[fase_key]['PCI']['avg'],
+                    
+                    'tci_min': estatisticas_finais[fase_key]['TCI']['min'],
+                    'tci_max': estatisticas_finais[fase_key]['TCI']['max'],
+                    'tci_avg': estatisticas_finais[fase_key]['TCI']['avg'],
+                    'ur_min': estatisticas_finais[fase_key]['UR']['min'],
+                    'ur_max': estatisticas_finais[fase_key]['UR']['max'],
+                    'ur_avg': estatisticas_finais[fase_key]['UR']['avg'],
+                    
                 }
             fase = self.env['steril_supervisorio.ciclos.fases.eto'].search(['&',('name','=', fase_key),('ciclo','=',self.id)])
             if len(fase) >  0:
@@ -756,106 +787,125 @@ class SupervisorioCiclos(models.Model):
             else:
                 fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
             sequence +=1
+    def set_chart_image(self):
+        for rec in self:
+            _logger.debug("Gerando grafico...")
+            fig = rec.mount_fig_chart()
+            _logger.debug("Grafico gerado!")
+            #fig.write_image("fig1.jpeg")
+
+            svg_image_bytes  = fig.to_image(format="png", width=600, height=350, scale=1)
+           
+            _logger.debug("Transformado em figura")
+            # # Convertendo a imagem PNG em dados binários
+            # buffer = io.BytesIO()
+            # buffer.write(svg_image_bytes)
+            # buffer.seek(0)
+
+            # _logger.debug("Colocando no banco de dados")
+            # rec.grafico_ciclo = base64.b64encode(buffer.read())
+
     
-    
-    def get_chart_image(self):
+    # def get_chart_image(self):
         
-        num_ticks = 11  # Quantidade desejada de ticks no eixo y
-        # if not self.path_file_ciclo_txt:
-        #     return
-        data_full = self.ler_arquivo_dados(self.path_file_ciclo_txt)
-        dados,segmentos = data_full
-        dados = [x for x in dados if not x[1].startswith(('PULSO','INJETANDO ETO'))] # retirando todos os dados que tem pulsos
-        
-        
-        #sanitizando dados
-        dados_sanitizados = [x for x in dados if len(x)>2]
-        segmentos_sanitizados = [x for x in segmentos if not x[1].startswith( 'PULSO')]
+    #     num_ticks = 11  # Quantidade desejada de ticks no eixo y
+    #     # if not self.path_file_ciclo_txt:
+    #     #     return
+    #     data_full = self.ler_arquivo_dados(self.path_file_ciclo_txt)
+    #     dados,segmentos = data_full
+    #     dados = [x for x in dados if not x[1].startswith(('PULSO','INJETANDO ETO'))] # retirando todos os dados que tem pulsos
         
         
-        # Criar uma lista de cores para os segmentos
-        cores = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'gray']
+    #     #sanitizando dados
+    #     dados_sanitizados = [x for x in dados if len(x)>2]
+    #     segmentos_sanitizados = [x for x in segmentos if not x[1].startswith( 'PULSO')]
+        
+        
+    #     # Criar uma lista de cores para os segmentos
+    #     cores = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'gray']
         
 
-        # Extrair os valores de cada coluna
-        amostra = range(0, len(dados_sanitizados) )
+    #     # Extrair os valores de cada coluna
+    #     amostra = range(0, len(dados_sanitizados) )
        
-        pci = [float(item[1]) for item in dados_sanitizados]
-        tci = [float(item[2]) for item in dados_sanitizados]
+    #     pci = [float(item[1]) for item in dados_sanitizados]
+    #     tci = [float(item[2]) for item in dados_sanitizados]
 
-        # data = [{'y': pci},{'y': tci}]
-        # self.plotly_chart = plotly.offline.plot(data,
-        #                                    include_plotlyjs=False,
-        #                                    output_type='div')
+    #     # data = [{'y': pci},{'y': tci}]
+    #     # self.plotly_chart = plotly.offline.plot(data,
+    #     #                                    include_plotlyjs=False,
+    #     #                                    output_type='div')
         
-        fases = [item[1] for item in segmentos_sanitizados]
-        indices_fases = obter_faixas_indices_fases(dados,fases)
-        if(len(indices_fases) > 1):
-            indices_fases.append( [indices_fases[-1][1],len(dados_sanitizados)-1 ])
-       
-
-        # Configurar o gráfico com subplots
-        fig, ax1 = plt.subplots(figsize=(21, 9))
-        
-        ax1.plot(amostra, pci, label='PCI', color='red',drawstyle='steps-mid')
-       
-        ax1.set_xlabel('Amostra')
-        ax1.set_ylabel('PCI', color='red')
-        ax1.tick_params('y', colors='red')
-        ax1.tick_params(axis='both',labelsize=12)
-
-        # Plotar as áreas preenchidas para cada segmento
-        for fase in indices_fases:
-            ax1.fill_between(fase, -1,0, facecolor=cores[indices_fases.index(fase)], alpha=.2)
-
-        # Criar os patches para a legenda
-        list_patch = []
-        for f in FASES:
-            list_patch.append(plt.Rectangle((0, 0), 1, 1, fc=cores[FASES.index(f)], alpha=0.5))
+    #     fases = [item[1] for item in segmentos_sanitizados]
+    #     indices_fases = obter_faixas_indices_fases(dados,fases)
+    #     if(len(indices_fases) > 1):
+    #         indices_fases.append( [indices_fases[-1][1],len(dados_sanitizados)-1 ])
        
 
-        # Adicionar a legenda com os patches personalizados
-        #ax1.legend([patch1, patch2], ['Área 1', 'Área 2'])
+    #     # Configurar o gráfico com subplots
+    #     fig, ax1 = plt.subplots(figsize=(21, 9))
+        
+    #     ax1.plot(amostra, pci, label='PCI', color='red',drawstyle='steps-mid')
+       
+    #     ax1.set_xlabel('Amostra')
+    #     ax1.set_ylabel('PCI', color='red')
+    #     ax1.tick_params('y', colors='red')
+    #     ax1.tick_params(axis='both',labelsize=12)
+
+    #     # Plotar as áreas preenchidas para cada segmento
+    #     for fase in indices_fases:
+    #         ax1.fill_between(fase, -1,0, facecolor=cores[indices_fases.index(fase)], alpha=.2)
+
+    #     # Criar os patches para a legenda
+    #     list_patch = []
+    #     for f in FASES:
+    #         list_patch.append(plt.Rectangle((0, 0), 1, 1, fc=cores[FASES.index(f)], alpha=0.5))
+       
+
+    #     # Adicionar a legenda com os patches personalizados
+    #     #ax1.legend([patch1, patch2], ['Área 1', 'Área 2'])
                 
-        ax2 = ax1.twinx()
-        ax2.plot(amostra, tci, label='TCI', color='blue',drawstyle='steps-mid')
-        ax2.set_ylabel('TCI', color='blue')
-        ax2.tick_params('y', colors='blue')
-        ax2.tick_params(axis='both',labelsize=12)
+    #     ax2 = ax1.twinx()
+    #     ax2.plot(amostra, tci, label='TCI', color='blue',drawstyle='steps-mid')
+    #     ax2.set_ylabel('TCI', color='blue')
+    #     ax2.tick_params('y', colors='blue')
+    #     ax2.tick_params(axis='both',labelsize=12)
         
-        # Definir escalas fixas para os eixos de PCI e TCI
-        ax1.set_ylim(-1, 0)  # Define a escala fixa de 0 a 10 para o eixo de PCI
-        ax2.set_ylim(0, 100)  # Define a escala fixa de 40 a 60 para o eixo de TCI
-        # Aumentar a quantidade de ticks nos eixos y
+    #     # Definir escalas fixas para os eixos de PCI e TCI
+    #     ax1.set_ylim(-1, 0)  # Define a escala fixa de 0 a 10 para o eixo de PCI
+    #     ax2.set_ylim(0, 100)  # Define a escala fixa de 40 a 60 para o eixo de TCI
+    #     # Aumentar a quantidade de ticks nos eixos y
       
-        y_ticks_pci = np.linspace(-1, 0, num_ticks)
-        y_ticks_tci = np.linspace(0, 100, num_ticks)
+    #     y_ticks_pci = np.linspace(-1, 0, num_ticks)
+    #     y_ticks_tci = np.linspace(0, 100, num_ticks)
 
-        ax1.set_yticks(y_ticks_pci)
-        ax2.set_yticks(y_ticks_tci)
+    #     ax1.set_yticks(y_ticks_pci)
+    #     ax2.set_yticks(y_ticks_tci)
  
        
 
-        # Combine as legendas de ambos os eixos
-        handles, labels = ax1.get_legend_handles_labels()
-        handles2, labels2 = ax2.get_legend_handles_labels()
-        ax1.legend(list_patch,FASES,loc='best',fontsize=12)
-        ax2.legend(handles + handles2, labels + labels2,loc='best',fontsize=12)
-        ax1.grid(True, color='lightgray')
-        ax2.grid(True, color='gray')
-        plt.title('Gráfico P.C.I e T.C.I',fontsize=14)
+    #     # Combine as legendas de ambos os eixos
+    #     handles, labels = ax1.get_legend_handles_labels()
+    #     handles2, labels2 = ax2.get_legend_handles_labels()
+    #     ax1.legend(list_patch,FASES,loc='best',fontsize=12)
+    #     ax2.legend(handles + handles2, labels + labels2,loc='best',fontsize=12)
+    #     ax1.grid(True, color='lightgray')
+    #     ax2.grid(True, color='gray')
+    #     plt.title('Gráfico P.C.I e T.C.I',fontsize=14)
 
               
-        # Salvar o gráfico em um buffer
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='svg')
-        buffer.seek(0)
+    #     # Salvar o gráfico em um buffer
+    #     buffer = io.BytesIO()
+    #     plt.savefig(buffer, format='svg')
+    #     buffer.seek(0)
         
-        # Fechar a figura atual
-        plt.close()
-        # Retornar os dados da imagem
-        self.grafico_ciclo = base64.b64encode(buffer.read())
+    #     # Fechar a figura atual
+    #     plt.close()
+    #     # Retornar os dados da imagem
+    #     self.grafico_ciclo = base64.b64encode(buffer.read())
         
+    def action_update_grafico(self):
+        self.set_chart_image()
 
     def action_ler_diretorio(self):
         #TODO ver se a data do diretório é maior que a data da ultima_atualizacao, atualizando somente máquinas que tiverem ciclos novos
@@ -950,14 +1000,18 @@ class SupervisorioCiclosFasesETO(models.Model):
     )
     
     duration = fields.Float(string='Duração(HH:mm)',help="Duração em horas  da fase")
-    pci_max =  fields.Float(string='Pmax C.I.')
-    pci_min =  fields.Float(string='Pmin C.I.')
-    pci_avg =  fields.Float(string='Pmedia C.I.')
-    pci_freq =  fields.Float(string='Pfreq C.I.')
-    tci_max =  fields.Float(string='Tmax C.I.')
-    tci_min =  fields.Float(string='Tmin C.I.')
-    tci_avg =  fields.Float(string='Tmedia C.I.')
-    tci_freq =  fields.Float(string='Tfreq C.I.')
+    pci_max =  fields.Float(string='Pmax')
+    pci_min =  fields.Float(string='Pmin')
+    pci_avg =  fields.Float(string='Pmedia')
+    pci_freq =  fields.Float(string='Pfreq')
+    tci_max =  fields.Float(string='Tmax')
+    tci_min =  fields.Float(string='Tmin')
+    tci_avg =  fields.Float(string='Tmedia')
+    tci_freq =  fields.Float(string='Tfreq')
+    ur_max =  fields.Float(string='URmax')
+    ur_min =  fields.Float(string='URmin')
+    ur_avg =  fields.Float(string='URmedia')
+    ur_freq =  fields.Float(string='URfreq')
     
 
 class SupervisorioCiclosFasesVapor(models.Model):

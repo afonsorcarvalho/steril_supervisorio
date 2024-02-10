@@ -8,7 +8,7 @@
                     <header>
                         <button name="action_ler_diretorio" string="Ler diretorio"
                             class="oe_highlight" type="object" groups="base.group_no_one" />
-                        <button name="get_chart_image" string="Atualiza Grafico"
+                        <button name="action_update_grafico" string="Atualiza Grafico"
                             class="oe_highlight" type="object" groups="base.group_no_one" />
                         <button name="action_inicia_incubacao" string="Inicia Incubação"
                             class="oe_highlight" type="object" groups="steril_supervisorio.group_operador"
@@ -114,26 +114,29 @@
                                 
                             </group>
 
-                        <!-- <group string="Dados do Ciclo" ></group> -->
-                                <!-- <field name="fases" string= "Fases" nolabel="1" readonly="1">
+                         <group string="Dados do Ciclo" ></group> 
+                                <field name="fases" string= "Fases" nolabel="1" readonly="1">
                                     <tree>
                                         <field name="name" string="Fase" />
-                                        <field name="duration"  widget="float_time" />
+                                        <!-- <field name="duration"  widget="float_time" /> -->
                                         <field name="pci_min" />
                                         <field name="pci_max" />
                                         <field name="pci_avg" />
                                         <field name="tci_min" />
                                         <field name="tci_max" />
                                         <field name="tci_avg" />
+                                        <field name="ur_min" />
+                                        <field name="ur_max" />
+                                        <field name="ur_avg" />
                                     </tree>
-                                </field> -->
-                                <!-- <field name="grafico_ciclo" widget="image" options='{"zoom": true}' attrs = "{'readonly': [('state','not in',('draft'))]}"/> -->
-                                <group>
+                                </field>
+                                 <field name="grafico_ciclo" widget="image" options='{"zoom": true}' attrs = "{'readonly': [('state','not in',('draft'))]}"/> 
+                                <!-- <group> -->
 
-                                    <div class="col-12">
-                                       <field name="plotly_chart" widget="plotly_chart" nolabel="1"/>
+                                    <div class="col-12 text-center">
+                                       <field name="plotly_chart" widget="plotly_chart" nolabel="1" widht="100%"/>
                                    </div> 
-                                </group>
+                                <!-- </group> -->
 
                     </sheet>
                     <div class="oe_chatter">
