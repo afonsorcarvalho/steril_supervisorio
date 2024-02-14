@@ -1,0 +1,24 @@
+<odoo>
+    <data>
+    <record id="steril_supervisorio.equipments_form_inhrerit" model="ir.ui.view">
+        <field name="name">Equipamentos Form inherit</field>
+        <field name="model">engc.equipment</field>
+        <field name="inherit_id" ref="engc_os.equipments_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[6]" position="after">
+                <page string="Configuração Ciclo">
+                    <group>
+                        <group>
+
+                            <field name="cycle_model"/>
+                            <field name="chamber_size"/>
+                        </group>
+                    </group>
+
+                </page>
+                
+            </xpath>
+        </field>
+    </record>
+    </data>
+</odoo>

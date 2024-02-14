@@ -5,13 +5,14 @@ from datetime import  datetime,timedelta
 from dateutil import  parser
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+from plotly import tools
 from collections import Counter
 import plotly.graph_objects as go
 import plotly.offline as pyo
-import plotly.io as pio
 
 
-from .cycle_statistics.eto_statistics import eto_statistics
+from .fita_digital.dataobject_fita_digital import dataobject_fita_digital
 import json
 
 
@@ -26,6 +27,7 @@ import os
 import logging
 _logger = logging.getLogger(__name__)
 
+    
 
 FASES = ['LEAK-TEST',
                   'ACONDICIONAMENTO',
@@ -37,6 +39,18 @@ FASES = ['LEAK-TEST',
                   'CICLO FINALIZADO']
 fuso_horario = pytz.timezone('America/Sao_Paulo')  # Exemplo de fuso horário (America/Sao_Paulo)
 
+def dict2tuple(list_dict):
+    temp_tuple = ()
+    for mdn in list_dict.keys():
+        f_value = str2float(list_dict[mdn])       
+        temp_tuple = temp_tuple + (f_value if f_value else list_dict[mdn],)
+    return temp_tuple
+def str2float(value_str):
+    try:
+        valor = float(value_str)
+        return valor
+    except ValueError:
+        return False
 def is_float(value):
         try:
             float(value)
@@ -93,11 +107,39 @@ class SupervisorioCiclos(models.Model):
     file = fields.Binary()
     modelo_ciclo = fields.Selection([('eto', 'ETO'),('vapor', 'VAPOR')], default='eto')
     tipo_ciclo = fields.Char() # tipo do ciclo ex. Esterilização, Aeração, Leak-test, Tecidos ...
+    
+    def _get_default_cycle_model(self):
+        return self.equipment.cycle_model.id
+    cycle_model = fields.Many2one('steril_supervisorio.cycle_model',default =_get_default_cycle_model, )
+    
+    
     indicador_biologico = fields.Many2one(
         'steril_supervisorio.ciclos.indicador.biologico',
         string='Lote BI',
         )
-  
+    massa_eto = fields.Float("Massa ETO",help="Insira a quantidade de ETO admitida em Kg")
+    concentracao_eto = fields.Float("Concentração ETO", compute="_compute_concentracao_eto")
+    @api.onchange('massa_eto')
+    def onchange_field(self):
+        self._compute_concentracao_eto()
+    
+    @api.depends('massa_eto')
+    def _compute_concentracao_eto(self):
+        # 1.	Dividir a massa ETO (Kg) pelo volume da câmara (10.000 L):
+        # Cálculo:           Massa ETO (Kg) = _________ = _________Kg/ L              
+        #                                 Volume (L)                                                                                   
+        # 2.	Multiplica o valor acima encontrado por 90% Gás ETO.
+        # O valor encontrado é o resultado da concentração em Kg/L:
+        # Cálculo:        ___________Kg/L  X  90% ETO = __________Kg/L  
+        #                 Valor acima encontrado
+        # 3.	Transformar Kg em mg (Multiplicar Massa (Kg) x 1000mg).
+        #     Cálculo:      _____________ Kg/L  X  1000mg = ____________mg/L
+        #                     Valor acima encontrado               Concentração ETO
+        try:
+            self.concentracao_eto = self.massa_eto*1000000*0.9/self.equipment.chamber_size
+        except:
+            self.concentracao_eto = 0.0
+        
     marca_bi = fields.Char(
         related='indicador_biologico.marca',
         readonly=True,
@@ -150,35 +192,127 @@ class SupervisorioCiclos(models.Model):
                 [('res_id', '=', self.id), ('res_model', '=', 'steril_supervisorio.ciclos')])
 
 
-    plotly_chart = fields.Text(
-         string='Plotly Chart',
-         compute='_compute_plotly_chart',
+    # plotly_chart = fields.Text(
+    #      string='Plotly Chart',
+    #      compute='_compute_plotly_chart',
         
-     )
-    def _compute_plotly_chart(self):
-        # for rec in self:
-        #     rec.get_chart_image()
-        for rec in self:
-            fig = rec.mount_fig_chart()
-            rec.plotly_chart = pyo.plot(fig, include_plotlyjs=False, output_type='div',)
+    #  )
+    
+    # def _compute_plotly_chart(self):
+    #     for rec in self:
+    #          fig = rec.mount_fig_chart_plotly()
+    #          rec.plotly_chart = pyo.plot(fig, include_plotlyjs=False, output_type='div')
             
-            #bin_image = pio.to_image(fig, format='svg')
-            
-            
-            
-            
-            
-            
-            
-            # Retornar os dados da imagem
-            #self.grafico_ciclo = base64.b64encode(buffer.read())
-            #rec.grafico_ciclo = base64.b64encode(bin_image)
+         
 
     _sql_constraints = [('codigo_ciclo_equipment_unique', 'unique(codigo_ciclo, equipment)',
                          'Codigo de ciclo duplicado '
                          'Não é permitido')]
     
-    def mount_fig_chart(self):
+    def _get_index_hora(self,data_raw,hora):
+           
+        for index, item in enumerate(data_raw):
+            if hora in item:
+                return index
+        return None 
+
+
+    def mount_fig_chart_matplot(self):
+        
+        data = []
+        do = self._get_dataobject_cycle()
+        data_raw = self._get_cycle_data()
+        for d in data_raw:
+            data.append(dict2tuple(d))
+        
+            
+        tempos = [item[0] for item in data]
+        valores1 = [item[1] for item in data]
+        valores2 = [item[2] for item in data]
+        valores3 = [item[3] for item in data]
+
+        fig, ax1 = plt.subplots(figsize=(16, 9))
+
+        color = 'tab:red'
+        ax1.set_xlabel('Hora')
+        ax1.set_ylabel('Pressão (Bar)', color=color)
+        ax1.plot(tempos, valores1, color=color,label="Pressão")
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.tick_params(axis='x',labelrotation=90.0,labelsize=8)
+
+        ax2 = ax1.twinx()
+        color = 'tab:blue'
+        ax2.set_ylabel('Temperatura (ºC) ', color=color)
+        ax2.plot(tempos, valores2, color=color,label="Temperatura")
+        ax2.tick_params( labelcolor=color,)
+        
+        ax2.set_ylim(0, 100)
+
+       
+        color = 'tab:green'
+        #ax3 = ax2.twinx()
+        ax2.plot(tempos, valores3, color=color,label="Umidade",)
+        color = 'tab:gray'
+        ax2.tick_params(axis='y', labelcolor=color,labelright=True)
+        ax2.set_ylabel('Umidade % / Temperatura ºC', color=color)
+        ax2.set_ylim(0, 100)
+       
+        #ax3.tick_params(axis='y', labelcolor=color)
+        ax1.grid(True)
+
+        #handles label legend
+        handles, labels = ax1.get_legend_handles_labels()
+        handles_2, labels_2= ax2.get_legend_handles_labels()
+        #handle_3  = [plt.Circle((0, 0), 1, color='blue', alpha=0.2)]
+        #handle_3  =   [Patch(facecolor='blue', edgecolor='blue', marker='o',label='5 min')]
+        #labels_3 = ["UR% 5min"]
+        ax2.grid(True)
+        #ax3.grid(False)
+
+
+        plt.xticks(rotation=90)
+        
+        fig.tight_layout()
+
+        data_effective_sterilization = do.data_threshold(data = do.extract_data_sterilization(event_start='ESTERILIZACAO', envent_stop='LAVAGEM'),threshold_value= -0.180)
+        #TODO FAZER PARA LER O VALOR DE UMIDADE COM 5 MIN, 120 MIN e 245 MIN
+        # Adicionando pontos marcados
+        if len(data_effective_sterilization) > 0:
+            indice_start_sterilization = self._get_index_hora(data,data_effective_sterilization[0]['Hora'])
+        else:
+            indice_start_sterilization = 0
+        
+        if indice_start_sterilization:
+            cinco_min = data[indice_start_sterilization+10] if (indice_start_sterilization+5) < len(data) else []
+            cento_vinte_min = data[indice_start_sterilization+225]  if (indice_start_sterilization+225) < len(data) else []
+            duzentos_trinta_cinco_min = data[indice_start_sterilization+440] if (indice_start_sterilization+440) < len(data) else []
+            if len(cinco_min) > 0 and len(cento_vinte_min) > 0 and len(duzentos_trinta_cinco_min) > 0 :
+                pontos_marcar = [[cinco_min[0], cinco_min[3]],[cento_vinte_min[0], cento_vinte_min[3]],[duzentos_trinta_cinco_min[0], duzentos_trinta_cinco_min[3]]]  # Adicione aqui os pontos a serem marcados
+                str_pontos = ['5 min','120 min', '235 min']
+                for index,p in enumerate(pontos_marcar):
+                    ax2.plot(p[0], p[1], 'o')  # 'o' representa círculos pretos ocos
+                    ax2.text(p[0], p[1]+2, f"{str_pontos[index]} \n {p[1]}%", ha='center')
+
+            # Adicionando a zona de esterilização
+            #TODO fazer o envent_start e envent_stop, theshold = pegando da configuração do modelo de ciclo
+            start_time = data_effective_sterilization[0]['Hora']
+            end_time = data_effective_sterilization[-1]['Hora']
+            zone_x = [start_time, end_time]  # Intervalo de x para a zona
+            zone_y_lower = [0, 0]  # Limite inferior da zona para cada ponto x
+            zone_y_upper = [100, 100]  # Limite superior da zona para cada ponto x
+            ax2.fill_between(zone_x, zone_y_lower, zone_y_upper, color='yellow', alpha=0.2, label='Esterilização',)
+        #ax2.text(zone_x[0], max(zone_y_upper) - 30, 'ESTERILIZAÇÃO', ha='center')
+        x_ticks = np.linspace(start=0,stop=len(tempos)-1,num=31)
+        y_ticks_2 = np.linspace(start=0,stop=100,num=21)
+        ax1.set_xticks(x_ticks)
+        ax2.set_yticks(y_ticks_2)
+        
+        ax2.legend(handles=handles+handles_2+[plt.Rectangle((0, 0), 1, 1, fc='yellow', alpha=0.2)],labels = labels + labels_2+["ESTERILIZAÇÃO"] , loc='best')
+        
+       #ax1.legend(,FASES,loc='best',fontsize=12)
+        return fig
+    
+    def mount_fig_chart_plotly(self):
         data_raw = self._get_cycle_data()
         data = []
         for d in data_raw:
@@ -232,7 +366,7 @@ class SupervisorioCiclos(models.Model):
                                     marker=dict(color='black', size=10,symbol='circle-open'),
                                     textposition='top center', showlegend=False,
                                     ))
-            fig.add_trace(go.Scatter(x=[p[0]], y=[p[1]+1],yaxis="y2",textposition='top center', mode='text', text=[f"{p[1]} %"], showlegend=False))
+            fig.add_trace(go.Scatter(x=[p[0]], y=[p[1]+2],yaxis="y2",textposition='top center', mode='text', text=[f"({p[0]},{p[1]}%)"], showlegend=False))
         # Adicionando a zona de esterilização
         fig.add_trace(go.Scatter(x=zone_x + zone_x[::-1],  # Criando uma linha fechada conectando os pontos
                         y=zone_y_lower + zone_y_upper[::-1],  # Adicionando os limites inferior e superior
@@ -245,12 +379,37 @@ class SupervisorioCiclos(models.Model):
                         ))
         
         return fig
+    
+    def _get_dataobject_cycle(self,path_file_ciclo_txt = None):
+                
+        do_cycle = dataobject_fita_digital()
+        
+        do_cycle.set_filename(path_file_ciclo_txt if path_file_ciclo_txt else self.path_file_ciclo_txt)
+        
+
+        # Configura a quantidade de colunas da fita e as grandezas relacionadas
+        columns_data = self.cycle_model.magnitude_data
+        #_logger.debug(columns_data)
+        columns_names =[]
+        for col in columns_data:
+            columns_names.append(col.name)
+        header_data = self.cycle_model.header_data
+        header_names = []
+        for header in header_data:
+            header_names.append(header.name)
+        do_cycle.set_model_columns_name_data(columns_names=['Hora','PCI','TCI','UR'])
+        #do_cycle.set_model_columns_data(qtd_columns=len(columns_data),columns_names=columns_names) 
+        # Configura a todos os dados que estao no cabecalho da fita
+        do_cycle.set_header_items(items=header_names) #items do cabecalho
+        #quantidade de linhas que tem o cabecalho
+        do_cycle.set_header_lines(25) 
+        return do_cycle
 
     def _get_cycle_data(self):
-        statistics_cycle = eto_statistics()
-        statistics_cycle.set_filename(self.path_file_ciclo_txt)
-        data = statistics_cycle.extract_cycle_data()
-        _logger.debug(data)
+        dataobject_cycle = self._get_dataobject_cycle()
+        data = dataobject_cycle.extract_cycle_data()
+        
+        
         return data
     
     @api.depends('data_inicio', 'data_fim')
@@ -371,6 +530,7 @@ class SupervisorioCiclos(models.Model):
                             _logger.debug(f'Nenhum ciclo no banco cadastrado')
                         if len(ciclo_existente) < 1: #não existe ciclo
                             header = self.get_header_fita(path_full_file)
+                            
                             operador_id = self._ler_arquivo_operador(header)
                             _logger.debug(f'Operador:{operador_id}')
                            
@@ -383,8 +543,10 @@ class SupervisorioCiclos(models.Model):
                                 'company_id': equipment.company_id.id,
                                 'equipment': equipment.id or None,
                                 'path_file_ciclo_txt' : path_full_file,
+                                'cycle_model': equipment.cycle_model.id
                                 }
                                 )
+                            
 
                         else:
                             ciclo_existente.write({'path_file_ciclo_txt' : path_full_file})
@@ -393,6 +555,8 @@ class SupervisorioCiclos(models.Model):
                       
                         #if(ciclo and ciclo.state not in ['finalizado']):
                         if(ciclo):
+                           #_logger.debug("Adicionando estatisticass")
+                           #ciclo.set_statistics_cycle()
                            _logger.debug("Adicionando imagem do grafico")
                            ciclo.set_chart_image()
                            _logger.debug("Adicionando anexo em pdf")
@@ -401,12 +565,14 @@ class SupervisorioCiclos(models.Model):
                            ciclo.add_data_file_to_record()
 
         return True   
-    
+    def set_statistics_cycle(self):
+        self._calcular_estatisticas_por_fase()
+
     def get_header_fita(self, path_file_name):
-        statistics = eto_statistics()
-        statistics.set_filename(path_file_name)
-        data = statistics.extract_header_cycle_sterilization()
-        _logger.debug(statistics)
+        do = self._get_dataobject_cycle(path_file_ciclo_txt=path_file_name)
+        
+        data = do.extract_header_cycle_sterilization()
+        
         _logger.debug(data)
         return data
 
@@ -417,19 +583,20 @@ class SupervisorioCiclos(models.Model):
     #     for linha in dados:
     #         if len(linha) > 1:
     def _calcular_estatisticas_por_tempo_esterilizacao(self):
-        t = eto_statistics()
-        t.set_filename(self.path_file_ciclo_txt)
-        data = t.extract_data_sterilization()
-        data_sterilization = t.dados_desde_pressao_limite(data,-0.180)
-        data_statistics_5 = t.calculate_metrics(data_sterilization, 5) # Pegando dos primeiros cinco minutos
-        data_statistics_120 = t.calculate_metrics(data_sterilization, 120) # Pegando dos 120 min
-        data_statistics_235 = t.calculate_metrics(data_sterilization, 235) # Pegando dos 235 min
-        return {
-            'ESTERILIZAÇÃO 5 MIN': data_statistics_5,
-            'ESTERILIZAÇÃO 120 MIN':data_statistics_120,
-            'ESTERILIZAÇÃO 235 MIN':data_statistics_235,
+        do = self._get_dataobject_cycle()
+        
+        
+        
+        # data_sterilization = do.extract_data_sterilization()
+        # data_statistics_5 = t.calculate_metrics(data_sterilization, 5) # Pegando dos primeiros cinco minutos
+        # data_statistics_120 = t.calculate_metrics(data_sterilization, 120) # Pegando dos 120 min
+        # data_statistics_235 = t.calculate_metrics(data_sterilization, 235) # Pegando dos 235 min
+        # return {
+        #     'ESTERILIZAÇÃO 5 MIN': data_statistics_5,
+        #     'ESTERILIZAÇÃO 120 MIN':data_statistics_120,
+        #     'ESTERILIZAÇÃO 235 MIN':data_statistics_235,
 
-        }
+        # }
 
 
 
@@ -484,16 +651,10 @@ class SupervisorioCiclos(models.Model):
         return estatisticas_finais
  
     def _calcular_tempo_decorrido(self,lista):
-        formato = '%H:%M:%S'
-
+        do = self._get_cycle_data()
         if not lista:
             return None
-
-        primeiro_item = datetime.strptime(lista[0][0], formato)
-        ultimo_item = datetime.strptime(lista[-1][0], formato)
-
-        diferenca_tempo = ultimo_item - primeiro_item
-
+        diferenca_tempo = do.compute_elapsed_time(lista[0][0],lista[-1][0])
         return diferenca_tempo
     
     def ler_fim_de_ciclo(self,dados,segmentos):
@@ -515,6 +676,43 @@ class SupervisorioCiclos(models.Model):
       
         return [is_finish,timedelta(seconds=data_time_delta.seconds)]
   
+    # def ler_arquivo_dados(self,file):
+    #     """
+    #     Lê um arquivo de dados e extrai as informações.
+
+    #     :param file: Caminho do arquivo a ser lido.
+    #     :type file: str
+    #     :return: Uma lista contendo os dados extraídos do arquivo e uma lista de segmentos.
+    #     :rtype: list
+
+    #     Exemplo de uso:
+    #         arquivo = '/caminho/do/arquivo.txt'
+    #         dados, segmentos = self.ler_arquivo_dados(arquivo)
+    #         print(dados)
+    #         print(segmentos)
+    #     """
+
+    #     dados = []
+    #     segmentos = []
+    #     nome_arquivo = file
+    #     with open(nome_arquivo, 'r') as arquivo:
+    #         linhas = arquivo.readlines()
+  
+    #         for linha in linhas:
+    #             #colunas = linha.strip().split('\s+')
+    #             colunas = re.split('\s+', linha)
+    #             colunas = [valor for valor in colunas if valor]
+                
+               
+    #             if len(colunas) > 1:
+    #                 if (self.verificar_conversao_tempo(colunas[0])):
+    #                     if(self.verificar_conversao_float(colunas[1])):
+    #                         dados.append(colunas)
+    #                     else:
+    #                         dados.append([colunas[0],' '.join(colunas[1:])])
+    #                         segmentos.append([colunas[0],' '.join(colunas[1:])])
+    #     _logger.debug([dados,segmentos])
+    #     return [dados,segmentos]
     def ler_arquivo_dados(self,file):
         """
         Lê um arquivo de dados e extrai as informações.
@@ -534,6 +732,11 @@ class SupervisorioCiclos(models.Model):
         dados = []
         segmentos = []
         nome_arquivo = file
+
+        #lendo configuração das fases
+        phases = self.cycle_model.phase_data
+        _logger.debug(f"As fases do modelo:{phases}")
+
         with open(nome_arquivo, 'r') as arquivo:
             linhas = arquivo.readlines()
   
@@ -541,6 +744,7 @@ class SupervisorioCiclos(models.Model):
                 #colunas = linha.strip().split('\s+')
                 colunas = re.split('\s+', linha)
                 colunas = [valor for valor in colunas if valor]
+                
                
                 if len(colunas) > 1:
                     if (self.verificar_conversao_tempo(colunas[0])):
@@ -549,7 +753,7 @@ class SupervisorioCiclos(models.Model):
                         else:
                             dados.append([colunas[0],' '.join(colunas[1:])])
                             segmentos.append([colunas[0],' '.join(colunas[1:])])
-        
+        #_logger.debug([dados,segmentos])
         return [dados,segmentos]
     
     def calcular_diferenca_tempo(self,lista):
@@ -703,7 +907,7 @@ class SupervisorioCiclos(models.Model):
         
     def _ler_arquivo_operador(self,header):
         
-        _logger.debug(header)
+        _logger.debug(f"HEADER: {header}")
         operador = header['Operador'] 
         apelido_operador = self.env['steril_supervisorio.ciclos.apelidos.operador'].search([('name','=',operador)])
         if len(apelido_operador):
@@ -724,10 +928,124 @@ class SupervisorioCiclos(models.Model):
             
     def add_data_file_to_record(self):
         
+        value = {}
         #lendo arquivo com os dados do ciclo
         _logger.debug(f"Entrando na add_data_file_to_record")
-        dados,segmentos = self.ler_arquivo_dados(self.path_file_ciclo_txt)
-        if len(dados) == 0:
+
+        # iniciando data object leitura da fita
+        do = self._get_dataobject_cycle()
+        data_cycle = do.extract_cycle_data()
+        # pegando as configuraç~eos de fase
+        
+        phases = self.cycle_model.phase_data
+        phases_name = phases.mapped('name') #nome da fase que sera mostrada
+        phases_regex = phases.mapped('regex_tape') #regex de procura na fita
+        _logger.debug(f"Fases do Ciclo: {phases_regex}")
+        _logger.debug(f"Qtd fases: {len(phases_regex)}")
+        for index, ph in enumerate(phases_regex):
+           
+            _logger.debug(f"Index: {index}")
+            if index >= (len(phases_regex)-1):
+                break
+            start_event = ph
+            end_event = phases_regex[index+1]
+            data_phase = do.extract_data_between_events(start_event=start_event, end_event=end_event)
+            statistics = do.calculate_metrics(data_phase)
+            value.update({'sequence': index,
+                    'name': phases_name[index],
+                    'ciclo': self.id,
+                    'duration': self.converter_para_float_time(statistics['duration']) ,})
+            value.update({
+     
+                    'pci_min': statistics['PCI']['min'] if statistics.get('PCI') else None,
+                    'pci_max': statistics['PCI']['max'] if statistics.get('PCI') else None,
+                    'pci_avg': statistics['PCI']['avg'] if statistics.get('PCI') else None,
+                    
+                    'tci_min': statistics['TCI']['min'] if statistics.get('TCI') else None,
+                    'tci_max': statistics['TCI']['max'] if statistics.get('TCI') else None,
+                    'tci_avg': statistics['TCI']['avg'] if statistics.get('TCI') else None,
+                    'ur_min': statistics['UR']['min'] if statistics.get('UR') else None,
+                    'ur_max': statistics['UR']['max'] if statistics.get('UR') else None ,
+                    'ur_avg': statistics['UR']['avg'] if statistics.get('UR') else None,
+               
+            })
+            
+            fase = self.env['steril_supervisorio.ciclos.fases.eto'].search(['&',('name','=', phases_name[index]),('ciclo','=',self.id)])
+            if len(fase) >  0:
+                fase[0].write(value)
+            else:
+                fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(value)
+            # ATUALIZANDO STATUS DO CICLO
+        #data_teste = do.extract_data_between_events(start_event=phases_regex[-2], end_event=phases_regex[-1])
+
+        if not phases_regex:
+            return 0
+        #se ciclo finalizado
+        start_cycle_time = data_cycle[0]['Hora']
+        end_cycle_time = data_cycle[-1]['Hora']
+        finished_cycle_time = do.search_phase_time(phases_regex[-1])
+        
+        if finished_cycle_time:
+            time_cycle_duration = do.compute_elapsed_time(start_time=start_cycle_time,end_time = finished_cycle_time)
+            self.write({
+                'state':'finalizado',
+                'data_fim': self.data_inicio + time_cycle_duration
+            })
+        else:
+            if self.identifica_ciclo_incompleto(self.data_inicio):
+                time_cycle_duration = do.compute_elapsed_time(start_time=start_cycle_time,end_time = end_cycle_time)
+                self.write({
+                    'state':'incompleto',
+                    'data_fim': self.data_inicio + time_cycle_duration
+                })
+            else:
+                self.write({
+                    'state':'em_andamento'
+                })
+
+        return 0
+        is_finish,tempo_fim_ciclo = self.get_data_time_fim_de_ciclo(dados,segmentos)
+        _logger.debug(f"Ciclo finalizado: {is_finish}, tempo de fim de ciclo {tempo_fim_ciclo}")
+        if(is_finish):
+            pass
+           
+        else:
+            if self.identifica_ciclo_incompleto(self.data_inicio):
+                self.write({
+                    'state':'incompleto',
+                    'data_fim': self.data_inicio + tempo_fim_ciclo
+                })
+            else:
+                self.write({
+                    'state':'em_andamento'
+                })
+
+           
+        return 0
+
+        values = {
+                    'sequence': sequence,
+                    'name': fase_key,
+                   
+                    'ciclo': self.id,
+                    'duration': tempos_integer.get(fase_key) ,
+                    'pci_min': estatisticas_finais[fase_key]['PCI']['min'],
+                    'pci_max': estatisticas_finais[fase_key]['PCI']['max'],
+                    'pci_avg': estatisticas_finais[fase_key]['PCI']['avg'],
+                    
+                    'tci_min': estatisticas_finais[fase_key]['TCI']['min'],
+                    'tci_max': estatisticas_finais[fase_key]['TCI']['max'],
+                    'tci_avg': estatisticas_finais[fase_key]['TCI']['avg'],
+                    'ur_min': estatisticas_finais[fase_key]['UR']['min'],
+                    'ur_max': estatisticas_finais[fase_key]['UR']['max'],
+                    'ur_avg': estatisticas_finais[fase_key]['UR']['avg'],
+                    
+                }
+
+        data = do.extract_data_between_events(start_event='LAVAGEM',end_event='AERACAO')
+        #dados,segmentos = self.ler_arquivo_dados(self.path_file_ciclo_txt)
+
+        if len(data) == 0:
             _logger.debug(f"nenhum dado lido, saindo")
             return
 
@@ -756,8 +1074,7 @@ class SupervisorioCiclos(models.Model):
                     'state':'em_andamento'
                 })
 
-        #estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
-        #estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
+       
         estatisticas_finais = self._calcular_estatisticas_por_tempo_esterilizacao()
         self.estatisticas_ciclo = json.dumps(estatisticas_finais)
         sequence = 1
@@ -781,29 +1098,91 @@ class SupervisorioCiclos(models.Model):
                     'ur_avg': estatisticas_finais[fase_key]['UR']['avg'],
                     
                 }
-            fase = self.env['steril_supervisorio.ciclos.fases.eto'].search(['&',('name','=', fase_key),('ciclo','=',self.id)])
-            if len(fase) >  0:
-                fase[0].write(values)
-            else:
-                fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
-            sequence +=1
+            
+
+    # def add_data_file_to_record(self):
+        
+    #     #lendo arquivo com os dados do ciclo
+    #     _logger.debug(f"Entrando na add_data_file_to_record")
+        
+    #     dados,segmentos = self.ler_arquivo_dados(self.path_file_ciclo_txt)
+    #     if len(dados) == 0:
+    #         _logger.debug(f"nenhum dado lido, saindo")
+    #         return
+
+    #     tempos,tempo_total = self.monta_tempos_ciclo(segmentos)
+    #     tempos_integer = {}
+        
+    #     for tempo in tempos:
+    #         h,m,s = tempos[tempo]
+    #         tempos_integer[tempo] = h + m/60 + s/(60*60)
+    #     is_finish,tempo_fim_ciclo = self.get_data_time_fim_de_ciclo(dados,segmentos)
+    #     _logger.debug(f"Ciclo finalizado: {is_finish}, tempo de fim de ciclo {tempo_fim_ciclo}")
+    #     if(is_finish):
+            
+    #         self.write({
+    #             'state':'finalizado',
+    #             'data_fim': self.data_inicio + tempo_fim_ciclo
+    #         })
+    #     else:
+    #         if self.identifica_ciclo_incompleto(self.data_inicio):
+    #             self.write({
+    #                 'state':'incompleto',
+    #                 'data_fim': self.data_inicio + tempo_fim_ciclo
+    #             })
+    #         else:
+    #             self.write({
+    #                 'state':'em_andamento'
+    #             })
+
+    #     #estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
+    #     #estatisticas_finais = self._calcular_estatisticas_por_fase(dados)
+    #     estatisticas_finais = self._calcular_estatisticas_por_tempo_esterilizacao()
+    #     self.estatisticas_ciclo = json.dumps(estatisticas_finais)
+    #     sequence = 1
+
+    #     for fase_key in estatisticas_finais.keys():
+    #         values = {
+    #                 'sequence': sequence,
+    #                 'name': fase_key,
+                   
+    #                 'ciclo': self.id,
+    #                 'duration': tempos_integer.get(fase_key) ,
+    #                 'pci_min': estatisticas_finais[fase_key]['PCI']['min'],
+    #                 'pci_max': estatisticas_finais[fase_key]['PCI']['max'],
+    #                 'pci_avg': estatisticas_finais[fase_key]['PCI']['avg'],
+                    
+    #                 'tci_min': estatisticas_finais[fase_key]['TCI']['min'],
+    #                 'tci_max': estatisticas_finais[fase_key]['TCI']['max'],
+    #                 'tci_avg': estatisticas_finais[fase_key]['TCI']['avg'],
+    #                 'ur_min': estatisticas_finais[fase_key]['UR']['min'],
+    #                 'ur_max': estatisticas_finais[fase_key]['UR']['max'],
+    #                 'ur_avg': estatisticas_finais[fase_key]['UR']['avg'],
+                    
+    #             }
+    #         fase = self.env['steril_supervisorio.ciclos.fases.eto'].search(['&',('name','=', fase_key),('ciclo','=',self.id)])
+    #         if len(fase) >  0:
+    #             fase[0].write(values)
+    #         else:
+    #             fase = self.env['steril_supervisorio.ciclos.fases.eto'].create(values)
+    #         sequence +=1
+            
     def set_chart_image(self):
         for rec in self:
             _logger.debug("Gerando grafico...")
-            fig = rec.mount_fig_chart()
+            fig = rec.mount_fig_chart_matplot()
             _logger.debug("Grafico gerado!")
-            #fig.write_image("fig1.jpeg")
-
-            svg_image_bytes  = fig.to_image(format="png", width=600, height=350, scale=1)
            
-            _logger.debug("Transformado em figura")
             # # Convertendo a imagem PNG em dados binários
-            # buffer = io.BytesIO()
-            # buffer.write(svg_image_bytes)
-            # buffer.seek(0)
+            buffer = io.BytesIO()
+            fig.savefig(buffer, format='png')
+            buffer.seek(0) 
+            #pyo.plot_mpl()
+            _logger.debug("Transformado em figura")
+           
 
-            # _logger.debug("Colocando no banco de dados")
-            # rec.grafico_ciclo = base64.b64encode(buffer.read())
+            _logger.debug("Colocando no banco de dados")
+            rec.grafico_ciclo = base64.b64encode(buffer.read())
 
     
     # def get_chart_image(self):
@@ -915,6 +1294,18 @@ class SupervisorioCiclos(models.Model):
         # self.ler_diretorio_ciclos("ETO02")
         self.ler_diretorio_ciclos("ETO01")
 
+    def action_insert_mass_eto(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Inserir Massa ETO',
+            'res_model': 'steril_supervisorio.insert.mass.eto.wizard',
+            'view_mode': 'form',
+            'view_type': 'form',
+            'target': 'new',
+            'context': {'default_ciclo': self.id,
+                        'default_state_ciclo': self.state}
+         }
+    
     def action_inicia_incubacao(self):
         return {
             'type': 'ir.actions.act_window',

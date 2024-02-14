@@ -38,7 +38,22 @@
                             <div class="col-4">
                                 <span t-field="o.data_fim" />
                             </div>
+                            
 
+                        </div>
+                        <div class="row">
+                            <div class="col-2">
+                                <strong>Massa Oxifume 90: </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.massa_eto" /> Kg
+                            </div>
+                            <div class="col-2">
+                                <strong>Concentração : </strong>
+                            </div>
+                            <div class="col-4">
+                                <span t-field="o.concentracao_eto" /> mg/L
+                            </div>
                         </div>
                          <div class = "row mt-3">
                             <div class="col-4">
@@ -133,7 +148,8 @@
                         </div>
                         <div class="row mt-3 mb-5">
                            <div class="col-12 text-left"  >
-                            <img class="mr-5" t-attf-src="data:image/svg+xml;charset=utf-8;base64,{{o.grafico_ciclo}}" width="100%"/>
+                            <!-- <img class="mr-5" t-attf-src="data:image/svg+xml;charset=utf-8;base64,{{o.grafico_ciclo}}" width="100%"/> -->
+                            <img class="mr-5" t-attf-src="data:image/png;base64,{{o.grafico_ciclo}}" width="100%"/>
                            </div>
                         </div>
                       

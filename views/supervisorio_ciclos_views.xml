@@ -8,8 +8,14 @@
                     <header>
                         <button name="action_ler_diretorio" string="Ler diretorio"
                             class="oe_highlight" type="object" groups="base.group_no_one" />
+                        <button name="add_data_file_to_record" string="Atualiza dados"
+                            class="oe_highlight" type="object" groups="base.group_no_one" />
                         <button name="action_update_grafico" string="Atualiza Grafico"
                             class="oe_highlight" type="object" groups="base.group_no_one" />
+                        <button name="action_insert_mass_eto" string="Inserir Massa ETO"
+                            class="oe_highlight" type="object" groups="steril_supervisorio.group_operador"
+                            states="em_andamento,finalizado"
+                             />
                         <button name="action_inicia_incubacao" string="Inicia Incubação"
                             class="oe_highlight" type="object" groups="steril_supervisorio.group_operador"
                             states="finalizado"
@@ -69,11 +75,22 @@
                         </div>
                         <group>
                             <group>
-                                <field name="equipment" 
-                                attrs = "{'readonly': [('state','not in',('draft'))]}" 
-                                />
-                                <field name="supervisor" widget="many2one_avatar_employee" attrs = "{'readonly': [('state','not in',('draft'))]}" />
-                                <field name="operator" widget="many2one_avatar_employee" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
+                                
+
+                                    <field name="equipment" 
+                                    attrs = "{'readonly': [('state','not in',('draft'))]}" 
+                                    />
+                                    <field name="cycle_model" 
+                                    groups="base.group_no_one" 
+                                    />
+                                   
+                                
+                                
+                                
+
+                                    <field name="supervisor" widget="many2one_avatar_employee" attrs = "{'readonly': [('state','not in',('draft'))]}" />
+                                    <field name="operator" widget="many2one_avatar_employee" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
+                                
                                
                             </group>
                             <group >
@@ -85,7 +102,20 @@
                                     <field name="data_fim" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                 </group>
                                 <group>
-                                    <field name="duration" widget="float_time" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
+                                    <field name="duration" string="Duração (HH:mm)" widget="float_time" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
+                                </group>
+                                <group></group>
+                                <group>
+                                    
+                                    
+                                    
+                                    <field name="massa_eto" string="Massa Oxifume 90 (Kg)" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
+                                </group>
+                                <group>
+                                    
+                                        
+                                        <field name="concentracao_eto" string="Concentração (mg/L)" attrs = "{'readonly': [('state','not in',('draft'))]}"/> 
+                                    
                                 </group>
                                 
                             </group>
@@ -118,7 +148,7 @@
                                 <field name="fases" string= "Fases" nolabel="1" readonly="1">
                                     <tree>
                                         <field name="name" string="Fase" />
-                                        <!-- <field name="duration"  widget="float_time" /> -->
+                                        <field name="duration"  widget="float_time" />
                                         <field name="pci_min" />
                                         <field name="pci_max" />
                                         <field name="pci_avg" />
@@ -133,9 +163,9 @@
                                  <field name="grafico_ciclo" widget="image" options='{"zoom": true}' attrs = "{'readonly': [('state','not in',('draft'))]}"/> 
                                 <!-- <group> -->
 
-                                    <div class="col-12 text-center">
+                                    <!-- <div class="col-12 text-center">
                                        <field name="plotly_chart" widget="plotly_chart" nolabel="1" widht="100%"/>
-                                   </div> 
+                                   </div>  -->
                                 <!-- </group> -->
 
                     </sheet>
