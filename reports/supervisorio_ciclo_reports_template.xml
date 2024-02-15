@@ -93,12 +93,15 @@
                                         <tr>
                                             <th>Fase</th>
                                             <th>Duração (HH:mm)</th>
-                                            <th>Pmax C.I.</th>
-                                            <th>Pmin C.I.</th>
-                                            <th>Pmed C.I.</th>
-                                            <th>Tmax C.I.</th>
-                                            <th>Tmin C.I.</th>
-                                            <th>Tmed C.I.</th>
+                                            <th>Pmax</th>
+                                            <th>Pmin</th>
+                                            <th>Pmed</th>
+                                            <th>Tmax</th>
+                                            <th>Tmin</th>
+                                            <th>Tmed</th>
+                                            <th>URmax</th>
+                                            <th>URmin</th>
+                                            <th>URmed</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -133,6 +136,18 @@
                                                 </td>
                                                 <td>
                                                     <span t-field="linha.tci_avg" t-options='{"widget": "float", "precision": 2}'/>
+                                                   
+                                                </td>
+                                                <td>
+                                                    <span t-field="linha.ur_max" t-options='{"widget": "float", "precision": 2}'/>
+                                                    
+                                                </td>
+                                                <td>
+                                                    <span t-field="linha.ur_min" t-options='{"widget": "float", "precision": 2}'/>
+                                                    
+                                                </td>
+                                                <td>
+                                                    <span t-field="linha.ur_avg" t-options='{"widget": "float", "precision": 2}'/>
                                                    
                                                 </td>
                                                 <!-- <td>
