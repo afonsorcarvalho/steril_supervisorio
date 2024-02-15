@@ -5,7 +5,14 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
-            
+            <style>
+                .legenda {
+                    font-size: 9px;
+                }
+                .titulo_grafico {
+                    margin:0px;
+                }
+            </style>
                 
                     <div class="page">
 
@@ -46,15 +53,21 @@
                         </div>
                         <div class="row">
                             <div class="col-2">
-                                <strong>Massa Oxifume 90: </strong>
+                                <strong>Massa oxifume: </strong>
                             </div>
-                            <div class="col-4">
+                            <div class="col-2">
+                                <span t-field="o.massa_eto_gas" /> Kg
+                            </div>
+                            <div class="col-2">
+                                <strong>Massa ETO: </strong>
+                            </div>
+                            <div class="col-2">
                                 <span t-field="o.massa_eto" /> Kg
                             </div>
                             <div class="col-2">
                                 <strong>Concentração : </strong>
                             </div>
-                            <div class="col-4">
+                            <div class="col-2">
                                 <span t-field="o.concentracao_eto" /> mg/L
                             </div>
                         </div>
@@ -91,7 +104,8 @@
                         
                         <div class="row mt-3">
                             <div class="col text-center">
-                                <table class="table table-condensed table-striped">
+                                
+                                <table class="mb-0 table table-sm table-condensed table-striped">
                                     <thead>
                                         <tr>
                                             <th>Fase</th>
@@ -161,16 +175,28 @@
                                         </t>
                                     </tbody>
                                 </table>
+                                <div class="legenda">Legenda: Pmax - Pressão máxima; Pmin - Pressão mínima; Pmed - Pressão média; Tmax - Temperatura máxima;  Tmax - Temperatura mínima; Tmed - Temperatura média; URmax - Umidade relativa máxima; URmin - Umidade realativa mínima; URmed - Umidade relativa média</div>
 
                             </div>
                         </div>
-                        <div class="row mt-3 mb-5">
-                           <div class="col-12 text-left"  >
+                        <div class="row mt-3 mb-1">
+                           <div class="col-12 text-center"  >
+                            <h5 class="titulo_grafico">Curvas Paramétricas</h5>
                             <!-- <img class="mr-5" t-attf-src="data:image/svg+xml;charset=utf-8;base64,{{o.grafico_ciclo}}" width="100%"/> -->
                             <img class="mr-5" t-attf-src="data:image/png;base64,{{o.grafico_ciclo}}" width="100%"/>
                            </div>
                         </div>
-                      
+                        <div class="row pl-2 mt-0">
+                            Valores limites para liberação paramétrica: 1) Massa ETO (kg) =  5,2 a 14,7; 2) Concentração ETO (mg/L) = 450 a 1200; 3) Temperatura fase esterilização (°C) = 41 a 61; 4) Umidade Relativa fase esterilização (%) = 30 a 80.
+                            
+                            
+                        </div>
+                        <div class="row pl-2 mt-0">
+                           
+                                São colocados 15 indicadores biológicos esplalhados em diversos pontos do esterilizador e o resultado de todos eles após período de incubação de 48 horas deve dar negativo. 
+                            
+                            
+                        </div>
                         <div class="row mt-5">
                             <div class="col-6  text-center" >
                                 ________________________________________<br/>

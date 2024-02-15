@@ -14,7 +14,8 @@ class InsertMassEtoWizard(models.TransientModel):
         
        
         )
-    value_mass_eto = fields.Float("Mass de ETO (Kg)")
+   
+    value_mass_eto = fields.Float("Mass de gas (Kg)")
     
     def cancel(self):
 
@@ -24,7 +25,8 @@ class InsertMassEtoWizard(models.TransientModel):
     def save(self):
         # Lógica para salvar a data de início de incubação
             self.ciclo.write({
-                'massa_eto': self.value_mass_eto,
+                'massa_eto': self.value_mass_eto*(self.ciclo.cycle_model.porcentagem_eto/100),
+                'massa_eto_gas': self.value_mass_eto,
             })
           
         

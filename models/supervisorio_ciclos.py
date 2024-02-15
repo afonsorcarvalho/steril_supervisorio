@@ -117,7 +117,9 @@ class SupervisorioCiclos(models.Model):
         'steril_supervisorio.ciclos.indicador.biologico',
         string='Lote BI',
         )
+   
     massa_eto = fields.Float("Massa ETO",help="Insira a quantidade de ETO admitida em Kg")
+    massa_eto_gas = fields.Float("Massa gas ETO",help="Insira a quantidade de gas ETO admitida em Kg")
     concentracao_eto = fields.Float("Concentração ETO", compute="_compute_concentracao_eto")
     @api.onchange('massa_eto')
     def onchange_field(self):
@@ -136,7 +138,7 @@ class SupervisorioCiclos(models.Model):
         #     Cálculo:      _____________ Kg/L  X  1000mg = ____________mg/L
         #                     Valor acima encontrado               Concentração ETO
         try:
-            self.concentracao_eto = self.massa_eto*1000000*0.9/self.equipment.chamber_size
+            self.concentracao_eto = self.massa_eto*1000000/self.equipment.chamber_size
         except:
             self.concentracao_eto = 0.0
         

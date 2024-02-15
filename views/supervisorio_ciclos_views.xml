@@ -104,12 +104,15 @@
                                 <group>
                                     <field name="duration" string="Duração (HH:mm)" widget="float_time" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                 </group>
-                                <group></group>
+                                <group>
+                                    <field name="massa_eto_gas" string="Massa Oxifume (Kg)" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
+
+                                </group>
                                 <group>
                                     
                                     
                                     
-                                    <field name="massa_eto" string="Massa Oxifume 90 (Kg)" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
+                                    <field name="massa_eto" string="Massa ETO (Kg)" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                 </group>
                                 <group>
                                     

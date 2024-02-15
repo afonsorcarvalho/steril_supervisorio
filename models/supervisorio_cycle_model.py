@@ -12,6 +12,7 @@ class CycleModel(models.Model):
     header_data = fields.One2many(string='Cabeçalho',comodel_name='steril_supervisorio.cycle.model.header.data',inverse_name='cycle_model' )
     phase_data = fields.One2many(string='Fases',comodel_name='steril_supervisorio.cycle.model.phase.data',inverse_name='cycle_model' )
     magnitude_data = fields.One2many(string='Grandezas',comodel_name='steril_supervisorio.cycle.model.magnitude',inverse_name='cycle_model' )
+    porcentagem_eto = fields.Float(string="Porcentagem ETO")
    
 
 
