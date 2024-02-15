@@ -115,12 +115,14 @@ class SupervisorioCiclos(models.Model):
     
     indicador_biologico = fields.Many2one(
         'steril_supervisorio.ciclos.indicador.biologico',
-        string='Lote BI',
+        string='Lote BI', 
         )
    
-    massa_eto = fields.Float("Massa ETO",help="Insira a quantidade de ETO admitida em Kg")
-    massa_eto_gas = fields.Float("Massa gas ETO",help="Insira a quantidade de gas ETO admitida em Kg")
-    concentracao_eto = fields.Float("Concentração ETO", compute="_compute_concentracao_eto")
+    massa_eto = fields.Float("Massa ETO",help="Insira a quantidade de ETO admitida em Kg",  tracking=True)
+    massa_eto_gas = fields.Float("Massa gas ETO",help="Insira a quantidade de gas ETO admitida em Kg", tracking=True)
+    concentracao_eto = fields.Float("Concentração ETO", compute="_compute_concentracao_eto",
+     tracking=True
+    )
     @api.onchange('massa_eto')
     def onchange_field(self):
         self._compute_concentracao_eto()
@@ -152,7 +154,7 @@ class SupervisorioCiclos(models.Model):
         readonly=True,
         store=True)
     
-    resultado_bi = fields.Selection(selection = [('positivo','Positivo'),('negativo','Negativo')])
+    resultado_bi = fields.Selection(selection = [('positivo','Positivo'),('negativo','Negativo')], tracking=True)
     data_incubacao_bi = fields.Datetime(tracking=True)
     data_leitura_resultado_bi = fields.Datetime(tracking=True)
 
