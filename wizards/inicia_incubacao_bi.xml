@@ -19,14 +19,14 @@
                             />
                             
                             <field name="date_start" string="Data de Inicio" 
-                            attrs="{'invisible': [('state_ciclo','not in',('finalizado'))] }"
+                            attrs="{'invisible': ['|',('state_ciclo','not in',('finalizado')),('reprovado','=',True)] }"
                             />
                             <field name="date_end" string="Data de Leitura" 
-                            attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico'))] }"
+                            attrs="{'invisible': ['|',('state_ciclo','not in',('esperando_biologico')),('reprovado','=',True)] }"
                             />
-                            <field name="indicador_biologico" attrs="{'invisible':[('state_ciclo','not in',('finalizado'))],'required': [('state_ciclo','in',('finalizado'))]}"/>
+                            <field name="indicador_biologico" attrs="{'invisible':['|',('state_ciclo','not in',('finalizado')),('reprovado','=',True)],'required': [('state_ciclo','in',('finalizado')),('reprovado','=',False)]}"/>
                             <field name="resultado_bi" string="Resultado BI"  widget="radio" 
-                            attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico'))],'required': [('state_ciclo','in',('esperando_biologico'))]}"
+                            attrs="{'invisible': [('state_ciclo','not in',('esperando_biologico')),('reprovado','=',True)],'required': [('state_ciclo','in',('esperando_biologico'))]}"
                             />
                             <field name="motivo_reprovacao" string="Motivo Reprovação"  
                             attrs="{'invisible': [('state_ciclo','not in',('esperando_aprovacao_supervisor')),('reprovado','=',False)],'required': [('state_ciclo','in',('esperando_aprovacao_supervisor')),('reprovado','=',True)]}"
