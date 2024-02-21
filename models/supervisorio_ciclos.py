@@ -287,17 +287,17 @@ class SupervisorioCiclos(models.Model):
         else:
             indice_start_sterilization = 0
         _logger.debug(f"INDICE_START_STERILIZATION = {indice_start_sterilization}")
+        pontos_marcar = []
         if indice_start_sterilization:
-            ponto_1 = data[indice_start_sterilization+pontos_medida[0][0]] if (indice_start_sterilization+pontos_medida[0][0]) < len(data) else []
-            ponto_2 = data[indice_start_sterilization+pontos_medida[1][0]]  if (indice_start_sterilization+pontos_medida[1][0]) < len(data) else []
-            ponto_3 = data[indice_start_sterilization+pontos_medida[2][0]] if (indice_start_sterilization+pontos_medida[2][0]) < len(data) else []
-            _logger.debug(f"PONTOS MEDIDA: {ponto_1} - {ponto_2} - {ponto_3}")
-            if len(ponto_1) > 0 and len(ponto_2) > 0 and len(ponto_3) > 0 :
-                pontos_marcar = [[ponto_1[0], ponto_1[3]],[ponto_2[0], ponto_2[3]],[ponto_3[0], ponto_3[3]]]  # Adicione aqui os pontos a serem marcados
-                str_pontos = [pontos_medida[0][1],pontos_medida[1][1], pontos_medida[2][1]]
-                for index,p in enumerate(pontos_marcar):
-                    ax2.plot(p[0], p[1], 'o')  # 'o' representa círculos pretos ocos
-                    ax2.text(p[0], p[1]+2, f"{str_pontos[index]} \n {p[1]}%", ha='center')
+            # pegando pontos de medida na fita de impressao
+            for pm in pontos_medida:
+                pontos_marcar.append(data[indice_start_sterilization+pm[0]] if (indice_start_sterilization+pm[0]) < len(data) else [])
+                _logger.debug(f"PONTOS MEDIDA: {pm}")
+            _logger.debug(f"ponstos array: {pontos_marcar}")
+            for index, pmrc in enumerate(pontos_marcar):
+                if len(pmrc) > 0:
+                    ax2.plot(pmrc[0], pmrc[3], 'o')  # 'o' representa círculos pretos ocos
+                    ax2.text(pmrc[0], pmrc[3]+2, f"{pontos_medida[index][1]} \n {pmrc[3]}%", ha='center')
 
             # Adicionando a zona de esterilização
             #TODO fazer o envent_start e envent_stop, theshold = pegando da configuração do modelo de ciclo
@@ -308,9 +308,11 @@ class SupervisorioCiclos(models.Model):
             zone_y_upper = [100, 100]  # Limite superior da zona para cada ponto x
             ax2.fill_between(zone_x, zone_y_lower, zone_y_upper, color='yellow', alpha=0.2, label='Esterilização',)
         #ax2.text(zone_x[0], max(zone_y_upper) - 30, 'ESTERILIZAÇÃO', ha='center')
-        x_ticks = np.linspace(start=0,stop=len(tempos)-1,num=31)
+        x_ticks = np.linspace(start=0,stop=len(tempos)-1,num=121)
+        y_ticks = np.linspace(start=-0.9,stop=0.1,num=21)
         y_ticks_2 = np.linspace(start=0,stop=100,num=21)
         ax1.set_xticks(x_ticks)
+        ax1.set_yticks(y_ticks)
         ax2.set_yticks(y_ticks_2)
         
         ax2.legend(handles=handles+handles_2+[plt.Rectangle((0, 0), 1, 1, fc='yellow', alpha=0.2)],labels = labels + labels_2+["ESTERILIZAÇÃO"] , loc='best')
