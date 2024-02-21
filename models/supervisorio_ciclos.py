@@ -222,7 +222,8 @@ class SupervisorioCiclos(models.Model):
 
 
     def mount_fig_chart_matplot(self):
-        pontos_medida = [[30,'15 min'],[225,'120 min'],[440,'235 min']]
+        #TODO melhorar os pontos de medida para pegar a hora correta e não os pontos
+        pontos_medida = [[30,'15 min'],[225,'120 min'],[430,'235 min']]
         data = []
         do = self._get_dataobject_cycle()
         data_raw = self._get_cycle_data()
@@ -290,6 +291,7 @@ class SupervisorioCiclos(models.Model):
             ponto_1 = data[indice_start_sterilization+pontos_medida[0][0]] if (indice_start_sterilization+pontos_medida[0][0]) < len(data) else []
             ponto_2 = data[indice_start_sterilization+pontos_medida[1][0]]  if (indice_start_sterilization+pontos_medida[1][0]) < len(data) else []
             ponto_3 = data[indice_start_sterilization+pontos_medida[2][0]] if (indice_start_sterilization+pontos_medida[2][0]) < len(data) else []
+            _logger.debug(f"PONTOS MEDIDA: {ponto_1} - {ponto_2} - {ponto_3}")
             if len(ponto_1) > 0 and len(ponto_2) > 0 and len(ponto_3) > 0 :
                 pontos_marcar = [[ponto_1[0], ponto_1[3]],[ponto_2[0], ponto_2[3]],[ponto_3[0], ponto_3[3]]]  # Adicione aqui os pontos a serem marcados
                 str_pontos = [pontos_medida[0][1],pontos_medida[1][1], pontos_medida[2][1]]
