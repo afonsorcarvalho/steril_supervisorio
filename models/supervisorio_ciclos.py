@@ -222,7 +222,7 @@ class SupervisorioCiclos(models.Model):
 
 
     def mount_fig_chart_matplot(self):
-        
+        pontos_medida = [[30,'15 min'],[225,'120 min'],[440,'235 min']]
         data = []
         do = self._get_dataobject_cycle()
         data_raw = self._get_cycle_data()
@@ -285,14 +285,14 @@ class SupervisorioCiclos(models.Model):
             indice_start_sterilization = self._get_index_hora(data,data_effective_sterilization[0]['Hora'])
         else:
             indice_start_sterilization = 0
-        
+        _logger.debug(f"INDICE_START_STERILIZATION = {indice_start_sterilization}")
         if indice_start_sterilization:
-            cinco_min = data[indice_start_sterilization+10] if (indice_start_sterilization+5) < len(data) else []
-            cento_vinte_min = data[indice_start_sterilization+225]  if (indice_start_sterilization+225) < len(data) else []
-            duzentos_trinta_cinco_min = data[indice_start_sterilization+440] if (indice_start_sterilization+440) < len(data) else []
-            if len(cinco_min) > 0 and len(cento_vinte_min) > 0 and len(duzentos_trinta_cinco_min) > 0 :
-                pontos_marcar = [[cinco_min[0], cinco_min[3]],[cento_vinte_min[0], cento_vinte_min[3]],[duzentos_trinta_cinco_min[0], duzentos_trinta_cinco_min[3]]]  # Adicione aqui os pontos a serem marcados
-                str_pontos = ['5 min','120 min', '235 min']
+            ponto_1 = data[indice_start_sterilization+pontos_medida[0][0]] if (indice_start_sterilization+pontos_medida[0][0]) < len(data) else []
+            ponto_2 = data[indice_start_sterilization+pontos_medida[1][0]]  if (indice_start_sterilization+pontos_medida[1][0]) < len(data) else []
+            ponto_3 = data[indice_start_sterilization+pontos_medida[2][0]] if (indice_start_sterilization+pontos_medida[2][0]) < len(data) else []
+            if len(ponto_1) > 0 and len(ponto_2) > 0 and len(ponto_3) > 0 :
+                pontos_marcar = [[ponto_1[0], ponto_1[3]],[ponto_2[0], ponto_2[3]],[ponto_3[0], ponto_3[3]]]  # Adicione aqui os pontos a serem marcados
+                str_pontos = [pontos_medida[0][1],pontos_medida[1][1], pontos_medida[2][1]]
                 for index,p in enumerate(pontos_marcar):
                     ax2.plot(p[0], p[1], 'o')  # 'o' representa círculos pretos ocos
                     ax2.text(p[0], p[1]+2, f"{str_pontos[index]} \n {p[1]}%", ha='center')

@@ -199,14 +199,19 @@ class dataobject_fita_digital():
         data = self.extract_data_between_events(event_start,envent_stop)
         return data
     
-    def data_threshold(self,data = [],threshold_name = 'PCI', threshold_value=-0.180):
+    def data_threshold(self,data = [],threshold_name = 'PCI', threshold_value=-0.180, threshold_uncertainty=0.010):
     
         # Encontrar o índice onde a pressão PCI atinge ou ultrapassa o limite
         indice_inicio = None
         for i, dado in enumerate(data):
-            if float(dado[threshold_name]) >=  threshold_value:
+
+            print ("VALOR DO THERSHOLD - INCERTEZA")
+            print (threshold_value - threshold_uncertainty)
+            print ("VALOR DO DADO ESTERILIZAÇÃO")
+            print (dado[threshold_name])
+            if float(dado[threshold_name]) >=  (threshold_value - threshold_uncertainty) :
                 indice_inicio = i
-                #print(indice_inicio)
+                print(indice_inicio)
                 break
 
         # Se não encontrar nenhum ponto acima do limite, retornar uma lista vazia

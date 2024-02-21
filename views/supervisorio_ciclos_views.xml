@@ -38,8 +38,6 @@
                             />
                     </header>
                     <sheet>
-                    
-                    
                         <div class="oe_button_box" name="button_box" >
                              <button class="oe_stat_button" type="object"
                         name="action_ciclos_documents" string="Documentos"
@@ -75,23 +73,14 @@
                         </div>
                         <group>
                             <group>
-                                
-
                                     <field name="equipment" 
                                     attrs = "{'readonly': [('state','not in',('draft'))]}" 
                                     />
                                     <field name="cycle_model" 
                                     groups="base.group_no_one" 
                                     />
-                                   
-                                
-                                
-                                
-
                                     <field name="supervisor" widget="many2one_avatar_employee" attrs = "{'readonly': [('state','not in',('draft'))]}" />
                                     <field name="operator" widget="many2one_avatar_employee" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
-                                
-                               
                             </group>
                             <group >
                                 <group>
@@ -106,19 +95,13 @@
                                 </group>
                                 <group>
                                     <field name="massa_eto_gas" string="Massa Oxifume (Kg)" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
-
                                 </group>
-                                <group>
-                                    
-                                    
-                                    
+                                <group>                                   
                                     <field name="massa_eto" string="Massa ETO (Kg)" attrs = "{'readonly': [('state','not in',('draft'))]}"/>
                                 </group>
                                 <group>
-                                    
-                                        
-                                        <field name="concentracao_eto" string="Concentração (mg/L)" attrs = "{'readonly': [('state','not in',('draft'))]}"/> 
-                                    
+                                          <field name="concentracao_eto" string="Concentração (mg/L)" attrs = "{'readonly': [('state','not in',('draft'))]}"/> 
+                                   
                                 </group>
                                 
                             </group>
@@ -128,7 +111,7 @@
                                 <group>
                                 
                                     <field name="motivo_reprovado" string="Motivo Reprovação" readonly="1"/>
-                                    
+
                                 </group>
                                 
                                 
