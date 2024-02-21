@@ -72,7 +72,9 @@ class StartIncubationWizard(models.TransientModel):
         if self.state_ciclo == 'esperando_aprovacao_supervisor':
             motivo_reprovacao = ""
             _logger.info(self.reprovado)
-            if self.reprovado == True:
+           
+            self.ciclo.write({'state':'concluido'})
+        if self.reprovado == True:
                 motivo_reprovacao = self.motivo_reprovacao
                 self.ciclo.write({
                 
@@ -80,10 +82,7 @@ class StartIncubationWizard(models.TransientModel):
                 
                 'motivo_reprovado': motivo_reprovacao,
 
-                })
-            else:
-                self.ciclo.write({'state':'concluido'})
-               
+                })   
        
             
         
