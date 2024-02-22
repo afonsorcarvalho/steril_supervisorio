@@ -291,10 +291,10 @@ class dataobject_fita_digital():
     
 #exemplo
 
-t = dataobject_fita_digital()
-t.set_filename("060224-01_20240206_131429.txt")
+#t = dataobject_fita_digital()
+#t.set_filename("060224-01_20240206_131429.txt")
 # t.set_model_columns_name_data(columns_names=['Hora','PCI','TCI','UR'])
-data_fase_sterilization = t.extract_header_cycle_sterilization()
+#data_fase_sterilization = t.extract_header_cycle_sterilization()
 # data_sterilization = t.data_threshold(data = data_fase_sterilization,threshold_name='PCI',threshold_value=-0.180)
 # print('ESTERILIZAÇÃO')
 # t.calculate_metrics(data_sterilization)
