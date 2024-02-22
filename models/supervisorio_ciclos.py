@@ -391,7 +391,7 @@ class SupervisorioCiclos(models.Model):
     def _get_dataobject_cycle(self,path_file_ciclo_txt = None):
                 
         do_cycle = dataobject_fita_digital()
-        
+        _logger.debug(f"DataObject_fita: {do_cycle}")
         do_cycle.set_filename(path_file_ciclo_txt if path_file_ciclo_txt else self.path_file_ciclo_txt)
         
 
