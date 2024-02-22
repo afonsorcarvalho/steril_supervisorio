@@ -388,23 +388,41 @@ class SupervisorioCiclos(models.Model):
         
         return fig
     
-    def _get_dataobject_cycle(self,path_file_ciclo_txt = None):
+    def _get_dataobject_cycle(self,path_file_ciclo_txt = None, equipment=0):
                 
         do_cycle = dataobject_fita_digital()
         _logger.debug(f"DataObject_fita: {do_cycle}")
         do_cycle.set_filename(path_file_ciclo_txt if path_file_ciclo_txt else self.path_file_ciclo_txt)
         
+        # procurando modelo do ciclo
+        _logger.debug("PROCURANDO MODELO DO CICLO")
+        if self.cycle_model:
+            _logger.debug(f"Já cadastrado no ciclo {self.name} o cycle model no")
+            columns_data = self.cycle_model.magnitude_data
+            header_data = self.cycle_model.header_data
+            
+        else:
+            _logger.debug(f"Nao encontrado cycle model no ciclo {self.name}")
+            if equipment:
+                _logger.debug(f"Procurando cycle model no  equipamento {equipment.name}")
+                columns_data = equipment.cycle_model.magnitude_data
+                header_data = equipment.cycle_model.header_data
+                _logger.debug(f"Modelo encontrado {equipment.cycle_model}")
+            else:
 
-        # Configura a quantidade de colunas da fita e as grandezas relacionadas
-        columns_data = self.cycle_model.magnitude_data
+                raise ValidationError("Equipamento não encontrado para pegar o modelo de um ciclo")
         #_logger.debug(columns_data)
+        # Configura a quantidade de colunas da fita e as grandezas relacionadas
         columns_names =[]
         for col in columns_data:
             columns_names.append(col.name)
-        header_data = self.cycle_model.header_data
+            
+        
+
         header_names = []
         for header in header_data:
             header_names.append(header.name)
+        _logger.debug(f"HEADER NAMES: {header_names}")
         do_cycle.set_model_columns_name_data(columns_names=['Hora','PCI','TCI','UR'])
         #do_cycle.set_model_columns_data(qtd_columns=len(columns_data),columns_names=columns_names) 
         # Configura a todos os dados que estao no cabecalho da fita
@@ -538,7 +556,7 @@ class SupervisorioCiclos(models.Model):
                             _logger.debug(f'Nenhum ciclo no banco cadastrado')
                         if len(ciclo_existente) < 1: #não existe ciclo
                             _logger.debug(f"Lendo header do arquivo: {path_full_file}")
-                            header = self.get_header_fita(path_full_file)
+                            header = self.get_header_fita(path_full_file,equipment)
                             
                             operador_id = self._ler_arquivo_operador(header)
                             _logger.debug(f'Operador:{operador_id}')
@@ -577,8 +595,8 @@ class SupervisorioCiclos(models.Model):
     def set_statistics_cycle(self):
         self._calcular_estatisticas_por_fase()
 
-    def get_header_fita(self, path_file_name):
-        do = self._get_dataobject_cycle(path_file_ciclo_txt=path_file_name)
+    def get_header_fita(self, path_file_name,equipment):
+        do = self._get_dataobject_cycle(path_file_ciclo_txt=path_file_name, equipment = equipment)
         
         data = do.extract_header_cycle_sterilization()
         
