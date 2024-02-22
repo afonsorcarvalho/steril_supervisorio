@@ -48,6 +48,7 @@ class dataobject_fita_digital():
         # Dicionário para armazenar os dados extraídos
         data = {}
         try:
+            print(f"Lendo arquivo: {self.filename}")
             with open(self.filename, 'r') as file:
                 lines = file.readlines()
         except FileNotFoundError:
@@ -70,7 +71,7 @@ class dataobject_fita_digital():
                     # Adicionar os dados ao dicionário
                     if key in self.header_items:
                         data[key] = value
-
+        print(f"Dados do Header lidos do arquivo: {data}")
         return data
     
     def extract_cycle_data(self):
