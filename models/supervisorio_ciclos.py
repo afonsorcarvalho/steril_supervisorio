@@ -537,6 +537,7 @@ class SupervisorioCiclos(models.Model):
                         else:
                             _logger.debug(f'Nenhum ciclo no banco cadastrado')
                         if len(ciclo_existente) < 1: #não existe ciclo
+                            _logger.debug(f"Lendo header do arquivo: {path_full_file}")
                             header = self.get_header_fita(path_full_file)
                             
                             operador_id = self._ler_arquivo_operador(header)
