@@ -205,8 +205,10 @@
                             </div>
                             <div class="col-6  text-center">
                                 ________________________________________<br/>
-                                <span t-field="o.supervisor" /><br/>
-                                Supervisor
+                                <!-- <span t-field="o.supervisor" /><br/> -->
+                                Garantia de qualidade<br/>
+                                Aprovação
+                                
 
                             </div>
                         </div>
