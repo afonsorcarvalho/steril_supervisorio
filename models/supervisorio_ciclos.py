@@ -193,7 +193,7 @@ class SupervisorioCiclos(models.Model):
         for record in self:
             record.document_count = self.env[
                 'ir.attachment'].search_count(
-                [('res_id', '=', self.id), ('res_model', '=', 'steril_supervisorio.ciclos')])
+                [('res_id', '=', record.id), ('res_model', '=', 'steril_supervisorio.ciclos')])
 
 
     # plotly_chart = fields.Text(
@@ -229,38 +229,49 @@ class SupervisorioCiclos(models.Model):
         data_raw = self._get_cycle_data()
         for d in data_raw:
             data.append(dict2tuple(d))
+        vals=[]
+        # index: 
+        # 0 - tempos
+        # 1 - PCI
+        # 2 - TCI
+        # 3 - UR
+        _logger.debug(data)
         
-            
-        tempos = [item[0] for item in data]
-        valores1 = [item[1] for item in data]
-        valores2 = [item[2] for item in data]
-        valores3 = [item[3] for item in data]
+        for index in range(len(self.cycle_model.magnitude_data)):
+            _logger.debug(f"Index:{index}")
+
+            vals.append([item[index] for item in data]  ) 
+        # tempos = [item[0] for item in data]
+        # valores1 = [item[1] for item in data]
+        # valores2 = [item[2] for item in data]
+        # valores3 = [item[3] for item in data]
 
         fig, ax1 = plt.subplots(figsize=(16, 9))
 
         color = 'tab:red'
         ax1.set_xlabel('Hora')
         ax1.set_ylabel('Pressão (Bar)', color=color)
-        ax1.plot(tempos, valores1, color=color,label="Pressão")
+        ax1.plot(vals[0], vals[1], color=color,label="Pressão")
+        _logger.info(f"Aqui os valores de pressão {vals[1]}")
         ax1.tick_params(axis='y', labelcolor=color)
         ax1.tick_params(axis='x',labelrotation=90.0,labelsize=8)
 
         ax2 = ax1.twinx()
         color = 'tab:blue'
         ax2.set_ylabel('Temperatura (ºC) ', color=color)
-        ax2.plot(tempos, valores2, color=color,label="Temperatura")
+        ax2.plot(vals[0], vals[2], color=color,label="Temperatura")
         ax2.tick_params( labelcolor=color,)
         
         ax2.set_ylim(0, 100)
 
-       
-        color = 'tab:green'
-        #ax3 = ax2.twinx()
-        ax2.plot(tempos, valores3, color=color,label="Umidade",)
-        color = 'tab:gray'
-        ax2.tick_params(axis='y', labelcolor=color,labelright=True)
-        ax2.set_ylabel('Umidade % / Temperatura ºC', color=color)
-        ax2.set_ylim(0, 100)
+        if len(vals)> 3:
+            color = 'tab:green'
+            #ax3 = ax2.twinx()
+            ax2.plot(vals[0], vals[3], color=color,label="Umidade",)
+            color = 'tab:gray'
+            ax2.tick_params(axis='y', labelcolor=color,labelright=True)
+            ax2.set_ylabel('Umidade % / Temperatura ºC', color=color)
+            ax2.set_ylim(0, 100)
        
         #ax3.tick_params(axis='y', labelcolor=color)
         ax1.grid(True)
@@ -308,7 +319,7 @@ class SupervisorioCiclos(models.Model):
             zone_y_upper = [100, 100]  # Limite superior da zona para cada ponto x
             ax2.fill_between(zone_x, zone_y_lower, zone_y_upper, color='yellow', alpha=0.2, label='Esterilização',)
         #ax2.text(zone_x[0], max(zone_y_upper) - 30, 'ESTERILIZAÇÃO', ha='center')
-        x_ticks = np.linspace(start=0,stop=len(tempos)-1,num=121)
+        x_ticks = np.linspace(start=0,stop=len(vals[0])-1,num=121)
         y_ticks = np.linspace(start=-0.9,stop=0.1,num=21)
         y_ticks_2 = np.linspace(start=0,stop=100,num=21)
         ax1.set_xticks(x_ticks)
@@ -329,12 +340,12 @@ class SupervisorioCiclos(models.Model):
         
         # Separar os dados em listas
         tempos = [item[0] for item in data]
-        valores1 = [item[1] for item in data]
+        vals[1] = [item[1] for item in data]
         valores2 = [item[2] for item in data]
         valores3 = [item[3] for item in data]
 
         # Criar os traces
-        trace1 = go.Scatter(x=tempos, y=valores1, mode='lines', name='Pressão (bar)', yaxis="y1")
+        trace1 = go.Scatter(x=tempos, y=vals[1], mode='lines', name='Pressão (bar)', yaxis="y1")
         trace2 = go.Scatter(x=tempos, y=valores2, mode='lines', name='Temperatura (ºC)', yaxis="y2")
         trace3 = go.Scatter(x=tempos, y=valores3, mode='lines', name='Umidade (UR%)', yaxis="y2")
 
@@ -393,7 +404,6 @@ class SupervisorioCiclos(models.Model):
         do_cycle = dataobject_fita_digital()
         _logger.debug(f"DataObject_fita: {do_cycle}")
         do_cycle.set_filename(path_file_ciclo_txt if path_file_ciclo_txt else self.path_file_ciclo_txt)
-        
         # procurando modelo do ciclo
         _logger.debug("PROCURANDO MODELO DO CICLO")
         if self.cycle_model:
@@ -416,14 +426,12 @@ class SupervisorioCiclos(models.Model):
         columns_names =[]
         for col in columns_data:
             columns_names.append(col.name)
-            
-        
-
         header_names = []
         for header in header_data:
             header_names.append(header.name)
+        _logger.debug(f"COLUMN NAMES: {columns_names}")
         _logger.debug(f"HEADER NAMES: {header_names}")
-        do_cycle.set_model_columns_name_data(columns_names=['Hora','PCI','TCI','UR'])
+        do_cycle.set_model_columns_name_data(columns_names=columns_names)
         #do_cycle.set_model_columns_data(qtd_columns=len(columns_data),columns_names=columns_names) 
         # Configura a todos os dados que estao no cabecalho da fita
         do_cycle.set_header_items(items=header_names) #items do cabecalho
@@ -572,7 +580,7 @@ class SupervisorioCiclos(models.Model):
                                 'path_file_ciclo_txt' : path_full_file,
                                 'cycle_model': equipment.cycle_model.id
                                 }
-                                )
+                            )
                             
 
                         else:
@@ -605,25 +613,11 @@ class SupervisorioCiclos(models.Model):
 
 
 
-    # def _sanitiza_dados(self,dados):
-    #     dados_sanitizados = []
-    #     for linha in dados:
-    #         if len(linha) > 1:
     def _calcular_estatisticas_por_tempo_esterilizacao(self):
         do = self._get_dataobject_cycle()
         
         
-        
-        # data_sterilization = do.extract_data_sterilization()
-        # data_statistics_5 = t.calculate_metrics(data_sterilization, 5) # Pegando dos primeiros cinco minutos
-        # data_statistics_120 = t.calculate_metrics(data_sterilization, 120) # Pegando dos 120 min
-        # data_statistics_235 = t.calculate_metrics(data_sterilization, 235) # Pegando dos 235 min
-        # return {
-        #     'ESTERILIZAÇÃO 5 MIN': data_statistics_5,
-        #     'ESTERILIZAÇÃO 120 MIN':data_statistics_120,
-        #     'ESTERILIZAÇÃO 235 MIN':data_statistics_235,
-
-        # }
+      
 
 
 
@@ -641,7 +635,7 @@ class SupervisorioCiclos(models.Model):
                 else:
                     fase_atual = linha[1]
                     estatisticas[fase_atual] = {
-                        'valores1': [],
+                        'vals[1]': [],
                         'valores2': [],
                     }
             else:

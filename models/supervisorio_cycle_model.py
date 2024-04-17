@@ -9,10 +9,20 @@ class CycleModel(models.Model):
     _description = 'Modulo de modelo de ciclo para equipamentos'
     
     name = fields.Char()
-    header_data = fields.One2many(string='Cabeçalho',comodel_name='steril_supervisorio.cycle.model.header.data',inverse_name='cycle_model' )
-    phase_data = fields.One2many(string='Fases',comodel_name='steril_supervisorio.cycle.model.phase.data',inverse_name='cycle_model' )
-    magnitude_data = fields.One2many(string='Grandezas',comodel_name='steril_supervisorio.cycle.model.magnitude',inverse_name='cycle_model' )
-    porcentagem_eto = fields.Float(string="Porcentagem ETO")
+    header_data = fields.One2many(string='Cabeçalho',comodel_name='steril_supervisorio.cycle.model.header.data',inverse_name='cycle_model',
+    copy=True
+     )
+    phase_data = fields.One2many(string='Fases',comodel_name='steril_supervisorio.cycle.model.phase.data',inverse_name='cycle_model',copy=True )
+    magnitude_data = fields.One2many(string='Grandezas',comodel_name='steril_supervisorio.cycle.model.magnitude',inverse_name='cycle_model',copy=True )
+    porcentagem_eto = fields.Float(string="Porcentagem ETO",copy=True)
+
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        # Adicione aqui sua lógica personalizada
+        # Por exemplo, definir um novo nome para a cópia
+        default['name'] = 'Cópia de ' + (self.name or '')
+        return super(CycleModel, self).copy(default=default)
    
 
 

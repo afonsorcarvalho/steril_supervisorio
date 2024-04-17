@@ -79,6 +79,14 @@ class dataobject_fita_digital():
         print(f"Dados do Header lidos do arquivo: {data}")
         return data
     
+    def filtrar_dados(self,dados):
+        dados_filtrados = []
+        padrao = r'\d{2}:\d{2}:\d{2}\s+-?\d+\.\d+\s+-?\d+\.\d+'
+        for linha in dados:
+            if re.match(padrao, linha):
+                dados_filtrados.append(linha)
+        return dados_filtrados
+    
     def extract_cycle_data(self):
 
         """Extracts cycle data from a file starting from a specified line.
@@ -97,19 +105,31 @@ class dataobject_fita_digital():
         """
         # Lista para armazenar os dados extraídos
         data = []
-
+        
         # Abrir o arquivo e ler as linhas
         with open(self.filename, 'r') as file:
             lines = file.readlines()[self.header_lines - 1:]
+       
+        dados_filtrados = self.filtrar_dados(lines)
+       
+        lines = dados_filtrados
+     
 
         # Iterar pelas linhas para extrair os dados
         for line in lines:
+           
             # Verificar se a linha contém os dados de interesse
             if line.strip() and not line.startswith('-'):
                 # Dividir a linha pelos espaços em branco
                 parts = line.split()
+               
+                # Padrao para encontrar linhas com horas e numeros
+                
+               
                 # Extrair os dados de interesse atraves da configuração grandezas
+                
                 if len(parts) == len(self.model_columns_name_data):
+                 
                     d = dict()
                     for index,p in enumerate(parts):
                         d.update({self.model_columns_name_data[index]:p})    
@@ -117,7 +137,7 @@ class dataobject_fita_digital():
                     # Adicionar os dados à lista
                     data.append(d)
                     
-
+       
         return data
 
     def mount_search(self,word):
