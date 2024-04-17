@@ -403,7 +403,13 @@ class SupervisorioCiclos(models.Model):
                 
         do_cycle = dataobject_fita_digital()
         _logger.debug(f"DataObject_fita: {do_cycle}")
-        do_cycle.set_filename(path_file_ciclo_txt if path_file_ciclo_txt else self.path_file_ciclo_txt)
+        if path_file_ciclo_txt:
+            do_cycle.set_filename(path_file_ciclo_txt if path_file_ciclo_txt else self.path_file_ciclo_txt)
+        else:
+            if self.path_file_ciclo_txt:
+                do_cycle.set_filename(self.path_file_ciclo_txt)
+            else:
+                raise ValidationError("Nenhum path_file_ciclo_txt encontrado")
         # procurando modelo do ciclo
         _logger.debug("PROCURANDO MODELO DO CICLO")
         if self.cycle_model:
