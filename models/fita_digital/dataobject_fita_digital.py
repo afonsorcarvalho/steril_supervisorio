@@ -219,11 +219,12 @@ class dataobject_fita_digital():
                             d.update({self.model_columns_name_data[index]:p}) 
                         # Adicionar os dados à lista
                         data.append(d)
+            data = self.filtrar_dados(data)
         return data
 
     def extract_data_sterilization(self, event_start = 'ESTERILIZACAO', envent_stop ='LAVAGEM' ):
         data = self.extract_data_between_events(event_start,envent_stop)
-        data = self.filtrar_dados(data)
+        
         return data
     
     def data_threshold(self,data = [],threshold_name = 'PCI', threshold_value=-0.180, threshold_uncertainty=0.010):
