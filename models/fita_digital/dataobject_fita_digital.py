@@ -213,7 +213,7 @@ class dataobject_fita_digital():
                     break
                 if found_start:
                     values = line.strip().split()
-                    values = self.filtrar_dados(values)
+                    
 
                     if len(values) >= qtd_columns:
                         d = dict()
@@ -238,10 +238,13 @@ class dataobject_fita_digital():
             print (threshold_value - threshold_uncertainty)
             print ("VALOR DO DADO ESTERILIZAÇÃO")
             print (dado[threshold_name])
-            if float(dado[threshold_name]) >=  (threshold_value - threshold_uncertainty) :
-                indice_inicio = i
-                print(indice_inicio)
-                break
+            try:
+                if float(dado[threshold_name]) >=  (threshold_value - threshold_uncertainty) :
+                    indice_inicio = i
+                    print(indice_inicio)
+                    break
+            except:
+                print("NÃO FOI POSSÍVEL VERFICAR threshold NESSA LINHA")
 
         # Se não encontrar nenhum ponto acima do limite, retornar uma lista vazia
         if indice_inicio is None:
