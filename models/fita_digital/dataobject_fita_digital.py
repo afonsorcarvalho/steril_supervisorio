@@ -113,7 +113,7 @@ class dataobject_fita_digital():
         dados_filtrados = self.filtrar_dados(lines)
        
         lines = dados_filtrados
-     
+
 
         # Iterar pelas linhas para extrair os dados
         for line in lines:
@@ -218,7 +218,12 @@ class dataobject_fita_digital():
                     if len(values) >= qtd_columns:
                         d = dict()
                         for index,p in enumerate(values):
-                            d.update({self.model_columns_name_data[index]:p}) 
+                            try:
+                                d.update({self.model_columns_name_data[index]:p}) 
+                            except IndexError as e:
+                                print(f"o index {index} não existe no modelo de coluna. Arquivo lido {self.filename} ")
+                                
+                                
                         # Adicionar os dados à lista
                         data.append(d)
           
@@ -244,7 +249,7 @@ class dataobject_fita_digital():
                     print(indice_inicio)
                     break
             except:
-                print("NÃO FOI POSSÍVEL VERFICAR threshold NESSA LINHA")
+                print("NÃO FOI POSSÍVEL VERIFICAR threshold NESSA LINHA")
 
         # Se não encontrar nenhum ponto acima do limite, retornar uma lista vazia
         if indice_inicio is None:

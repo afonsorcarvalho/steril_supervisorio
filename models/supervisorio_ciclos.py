@@ -37,6 +37,7 @@ FASES = ['LEAK-TEST',
                   'AERACAO',
                   'CICLO ABORTADO',
                   'CICLO FINALIZADO']
+
 fuso_horario = pytz.timezone('America/Sao_Paulo')  # Exemplo de fuso horário (America/Sao_Paulo)
 
 def dict2tuple(list_dict):
@@ -85,7 +86,6 @@ class SupervisorioCiclos(models.Model):
         required=True, 
         default=lambda self: self.env.user.company_id
     )
-    
 
     codigo_ciclo = fields.Char("Codigo Ciclo")
     state = fields.Selection(string='Status', selection=[('iniciado', 'Iniciado'),
@@ -195,7 +195,6 @@ class SupervisorioCiclos(models.Model):
                 'ir.attachment'].search_count(
                 [('res_id', '=', record.id), ('res_model', '=', 'steril_supervisorio.ciclos')])
 
-
     # plotly_chart = fields.Text(
     #      string='Plotly Chart',
     #      compute='_compute_plotly_chart',
@@ -206,9 +205,7 @@ class SupervisorioCiclos(models.Model):
     #     for rec in self:
     #          fig = rec.mount_fig_chart_plotly()
     #          rec.plotly_chart = pyo.plot(fig, include_plotlyjs=False, output_type='div')
-            
-         
-
+ 
     _sql_constraints = [('codigo_ciclo_equipment_unique', 'unique(codigo_ciclo, equipment)',
                          'Codigo de ciclo duplicado '
                          'Não é permitido')]
@@ -220,32 +217,26 @@ class SupervisorioCiclos(models.Model):
                 return index
         return None 
 
-
     def mount_fig_chart_matplot(self):
         #TODO melhorar os pontos de medida para pegar a hora correta e não os pontos
         pontos_medida = [[30,'15 min'],[225,'120 min'],[430,'235 min']]
         data = []
         do = self._get_dataobject_cycle()
+        if not do:
+            _logger.warning(f"Não foi possível montar o gráfico ciclo {self.name}, data_object retornou False")
+            return False
         data_raw = self._get_cycle_data()
         for d in data_raw:
             data.append(dict2tuple(d))
         vals=[]
-        # index: 
-        # 0 - tempos
-        # 1 - PCI
-        # 2 - TCI
-        # 3 - UR
+      
         _logger.debug(data)
         
         for index in range(len(self.cycle_model.magnitude_data)):
             _logger.debug(f"Index:{index}")
 
             vals.append([item[index] for item in data]  ) 
-        # tempos = [item[0] for item in data]
-        # valores1 = [item[1] for item in data]
-        # valores2 = [item[2] for item in data]
-        # valores3 = [item[3] for item in data]
-
+   
         fig, ax1 = plt.subplots(figsize=(16, 9))
 
         color = 'tab:red'
@@ -340,12 +331,12 @@ class SupervisorioCiclos(models.Model):
         
         # Separar os dados em listas
         tempos = [item[0] for item in data]
-        vals[1] = [item[1] for item in data]
+        valores1 = [item[1] for item in data]
         valores2 = [item[2] for item in data]
         valores3 = [item[3] for item in data]
 
         # Criar os traces
-        trace1 = go.Scatter(x=tempos, y=vals[1], mode='lines', name='Pressão (bar)', yaxis="y1")
+        trace1 = go.Scatter(x=tempos, y=valores1, mode='lines', name='Pressão (bar)', yaxis="y1")
         trace2 = go.Scatter(x=tempos, y=valores2, mode='lines', name='Temperatura (ºC)', yaxis="y2")
         trace3 = go.Scatter(x=tempos, y=valores3, mode='lines', name='Umidade (UR%)', yaxis="y2")
 
@@ -366,6 +357,7 @@ class SupervisorioCiclos(models.Model):
         umidade_120 = ['23:53:33',64]
         umidade_235 = ['01:20:52',64]
         pontos_marcar = [umidade_5,umidade_120,umidade_235]
+
         # Limites da zona a ser marcada
         zone_x = ['21:32:37', '01:32:45']  # Intervalo de x para a zona
         zone_y_lower = [0, 0]  # Limite inferior da zona para cada ponto x
@@ -405,7 +397,7 @@ class SupervisorioCiclos(models.Model):
         _logger.debug(f"DataObject_fita: {do_cycle}")
         if path_file_ciclo_txt:
             do_cycle.set_filename(path_file_ciclo_txt if path_file_ciclo_txt else self.path_file_ciclo_txt)
-        else:
+        else:          
             if self.path_file_ciclo_txt:
                 do_cycle.set_filename(self.path_file_ciclo_txt)
             else:
@@ -413,20 +405,24 @@ class SupervisorioCiclos(models.Model):
         # procurando modelo do ciclo
         _logger.debug("PROCURANDO MODELO DO CICLO")
         if self.cycle_model:
-            _logger.debug(f"Já cadastrado no ciclo {self.name} o cycle model no")
+            _logger.debug(f"Já cadastrado no ciclo {self.name} o cycle model {self.cycle_model.name}")
+            _logger.debug(f"Dados do cabeçalho {self.cycle_model.header_data}")
+            _logger.debug(f"Colunas de dados: {self.cycle_model.magnitude_data}")
             columns_data = self.cycle_model.magnitude_data
             header_data = self.cycle_model.header_data
             
         else:
-            _logger.debug(f"Nao encontrado cycle model no ciclo {self.name}")
+            _logger.debug(f"Não encontrado cycle model no ciclo {self.name}, procurando o modelo de ciclo padrão do equipamento")
             if equipment:
-                _logger.debug(f"Procurando cycle model no  equipamento {equipment.name}")
+                _logger.debug(f"Procurando cycle model no equipamento {equipment.name}")
                 columns_data = equipment.cycle_model.magnitude_data
                 header_data = equipment.cycle_model.header_data
-                _logger.debug(f"Modelo encontrado {equipment.cycle_model}")
+                if not equipment.cycle_model:
+                    raise ValidationError(f"O Equipamento {equipment.name} não tem um modelo de um ciclo padrão")
+                _logger.debug(f"Modelo encontrado {equipment.cycle_model.name}")
             else:
-
-                raise ValidationError("Equipamento não encontrado para pegar o modelo de um ciclo")
+                _logger.debug(f"No ciclo {self.name} não foi encontrado equipamento para pegar o modelo de um ciclo")
+                return False
         #_logger.debug(columns_data)
         # Configura a quantidade de colunas da fita e as grandezas relacionadas
         columns_names =[]
@@ -447,9 +443,10 @@ class SupervisorioCiclos(models.Model):
 
     def _get_cycle_data(self):
         dataobject_cycle = self._get_dataobject_cycle()
+        if not dataobject_cycle:
+            _logger.warning(f"Não foi possível pegar os dados do ciclo {self.name}, data_object retornou False")
+            return []
         data = dataobject_cycle.extract_cycle_data()
-        
-        
         return data
     
     @api.depends('data_inicio', 'data_fim')
@@ -587,7 +584,8 @@ class SupervisorioCiclos(models.Model):
                                 'cycle_model': equipment.cycle_model.id
                                 }
                             )
-                            
+                            ciclo.flush()
+                            _logger.debug(f"Ciclo {ciclo.name} criado!")
 
                         else:
                             ciclo_existente.write({'path_file_ciclo_txt' : path_full_file})
@@ -595,15 +593,18 @@ class SupervisorioCiclos(models.Model):
                         
                       
                         #if(ciclo and ciclo.state not in ['finalizado']):
-                        if(ciclo):
+                        if(ciclo and ciclo.state in ['iniciado','em_andamento', 'incompleto']):
                            #_logger.debug("Adicionando estatisticass")
-                           #ciclo.set_statistics_cycle()
-                           _logger.debug("Adicionando imagem do grafico")
+                           _logger.debug(f"Dados cabeçalho do ciclo: {ciclo.cycle_model},{ciclo.equipment.name}")
+                           _logger.debug(f"Adicionando imagem do grafico do ciclo {ciclo.name}")
+
                            ciclo.set_chart_image()
-                           _logger.debug("Adicionando anexo em pdf")
+                           _logger.debug(f"Adicionando anexo em pdf  do ciclo {ciclo.name}")
                            ciclo.adicionar_anexo_pdf()
-                           _logger.debug("Atualizando dados ao banco")
+                           _logger.debug(f"Atualizando dados ao banco  do ciclo {ciclo.name}")
                            ciclo.add_data_file_to_record()
+                           ciclo.flush()
+                           self.env.cr.commit()
 
         return True   
     def set_statistics_cycle(self):
@@ -611,7 +612,9 @@ class SupervisorioCiclos(models.Model):
 
     def get_header_fita(self, path_file_name,equipment):
         do = self._get_dataobject_cycle(path_file_ciclo_txt=path_file_name, equipment = equipment)
-        
+        if not do:
+            _logger.warning(f"Não foi possível pegar o cabecalho da fita do ciclo {self.name}, data_object retornou False")
+            return
         data = do.extract_header_cycle_sterilization()
         
         _logger.debug(data)
@@ -961,7 +964,13 @@ class SupervisorioCiclos(models.Model):
 
         # iniciando data object leitura da fita
         do = self._get_dataobject_cycle()
+        if not do:
+            _logger.warning(f"Não foi possível encontrar no ciclo {self.name} o data_object retornou False")
+            return 0
         data_cycle = do.extract_cycle_data()
+        if len(data_cycle) < 1:
+            _logger.warning(f"Nenhum dado foi encontrado no ciclo {self.name}")
+            return 0
         # pegando as configuraç~eos de fase
         
         phases = self.cycle_model.phase_data
@@ -977,6 +986,9 @@ class SupervisorioCiclos(models.Model):
             start_event = ph
             end_event = phases_regex[index+1]
             data_phase = do.extract_data_between_events(start_event=start_event, end_event=end_event)
+            if not data_phase:
+                _logger.warning(f"Nao encontrada dados entre os eventos {start_event} e {end_event}")
+                
             statistics = do.calculate_metrics(data_phase)
             value.update({'sequence': index,
                     'name': phases_name[index],
@@ -1198,6 +1210,9 @@ class SupervisorioCiclos(models.Model):
         for rec in self:
             _logger.debug("Gerando grafico...")
             fig = rec.mount_fig_chart_matplot()
+            if not fig:
+                _logger.debug("Não foi possível salvar imagem do gráfico, erro na montagem com os dados da fita!")
+                return False
             _logger.debug("Grafico gerado!")
            
             # # Convertendo a imagem PNG em dados binários
@@ -1319,7 +1334,7 @@ class SupervisorioCiclos(models.Model):
         # self.ler_diretorio_ciclos("ETO04")
         # self.ler_diretorio_ciclos("ETO03")
         # self.ler_diretorio_ciclos("ETO02")
-        self.ler_diretorio_ciclos("ETO01")
+        self.ler_diretorio_ciclos("ETO04")
 
     def action_insert_mass_eto(self):
         return {
