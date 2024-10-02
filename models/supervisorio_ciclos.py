@@ -243,7 +243,7 @@ class SupervisorioCiclos(models.Model):
         color = 'tab:red'
         ax1.set_xlabel('Hora')
         ax1.set_ylabel('Pressão (Bar)', color=color)
-        ax1.plot(vals[0], vals[1], color=color,label="Pressão")
+        ax1.plot(vals[0], float(vals[1]), color=color,label="Pressão")
         _logger.info(f"Aqui os valores de pressão {vals[1]}")
         ax1.tick_params(axis='y', labelcolor=color)
         ax1.tick_params(axis='x',labelrotation=90.0,labelsize=8)
