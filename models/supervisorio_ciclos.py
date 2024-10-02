@@ -529,7 +529,7 @@ class SupervisorioCiclos(models.Model):
         dbname = self.env.cr.dbname
         
         #lendo do diretorio que é atualizado pela IHMs dos equipamentos
-        dir_name_ciclos = self.env['ir.config_parameter'].get_param('steril_supervisorio_ultima_atualizacao')
+        dir_name_ciclos = self.env['ir.config_parameter'].get_param('steril_supervisorio_dir_name_ciclos')
         if not dir_name_ciclos:
             raise ValidationError("Nenhum steril_supervisorio_dir_name_ciclos encontrado nos paramentros da empresa.")
         diretorio = f"/var/lib/odoo/filestore/{dbname}/{dir_name_ciclos}/{equipment_alias}/" 
