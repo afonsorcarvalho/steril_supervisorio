@@ -532,7 +532,7 @@ class SupervisorioCiclos(models.Model):
         dir_name_ciclos = self.env['ir.config_parameter'].get_param('steril_supervisorio_dir_name_ciclos')
         if not dir_name_ciclos:
             raise ValidationError("Nenhum steril_supervisorio_dir_name_ciclos encontrado nos paramentros da empresa.")
-        diretorio = f"/var/lib/odoo/filestore/{dbname}/{dir_name_ciclos}/{equipment_alias}/" 
+        diretorio = f"/var/lib/odoo/filestore/{dbname}/{dir_name_ciclos.value}/{equipment_alias}/" 
         equipment = self.env['engc.equipment'].search([('apelido','=like',equipment_alias )])
         _logger.debug(f"O equipamento de apelido {equipment_alias}  agora é: {equipment}")
         #TODO modificar para ver se só os diretórios que tiveram atualização estejam na lista
