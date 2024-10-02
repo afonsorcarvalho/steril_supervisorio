@@ -16,6 +16,14 @@ class CycleModel(models.Model):
     magnitude_data = fields.One2many(string='Grandezas',comodel_name='steril_supervisorio.cycle.model.magnitude',inverse_name='cycle_model',copy=True )
     porcentagem_eto = fields.Float(string="Porcentagem ETO",copy=True)
 
+    # isso é usado pra calcular onde começa e finaliza a esterilização
+
+    effective_sterilization_event_start = fields.Char() # qual a fase que inicia a esterilizacao na fita
+    effective_sterilization_envent_stop = fields.Char() # qual a fase que finaliza a esterilizacao na fita
+    effective_sterilization_threshold_value = fields.Float() # valor que indica início da esterilização na fita
+    effective_sterilization_threshold_uncertainty = fields.Float()  # valor da incerteza que indica início da esterilização na fita
+    effective_sterilization_threshold_column_name = fields.Char() # nome da coluna que indica início da esterilização efetiva na fita
+    
     def copy(self, default=None):
         if default is None:
             default = {}
@@ -52,6 +60,7 @@ class CycleModelPhaseData(models.Model):
     hour_stop = fields.Char()
     is_invisible = fields.Boolean("Invisivel", default=False)
     type = fields.Selection([('char', 'Char'),('int', 'Integer'),('float','Float')])
+
 class CycleModelMagnitudes(models.Model):
     _name = 'steril_supervisorio.cycle.model.magnitude'
    

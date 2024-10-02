@@ -283,8 +283,20 @@ class SupervisorioCiclos(models.Model):
         plt.xticks(rotation=90)
         
         fig.tight_layout()
+        effective_sterilization_event_start = self.cycle_model.effective_sterilization_event_start
+        effective_sterilization_envent_stop = self.cycle_model.effective_sterilization_envent_stop
+        effective_sterilization_threshold_value = self.cycle_model.effective_sterilization_threshold_value
+        effective_sterilization_threshold_uncertainty = self.cycle_model.effective_sterilization_threshold_uncertainty
+        effective_sterilization_threshold_column_name = self.cycle_model.effective_sterilization_threshold_column_name
 
-        data_effective_sterilization = do.data_threshold(data = do.extract_data_sterilization(event_start='ESTERILIZACAO', envent_stop='LAVAGEM'),threshold_value= -0.180)
+        data_effective_sterilization = do.data_threshold(
+            data = do.extract_data_sterilization(
+                event_start=effective_sterilization_event_start,
+                event_stop=effective_sterilization_envent_stop),
+            threshold_value=effective_sterilization_threshold_value,
+            threshold_name=effective_sterilization_threshold_column_name,
+            threshold_uncertainty=effective_sterilization_threshold_uncertainty
+            )
         #TODO FAZER PARA LER O VALOR DE UMIDADE COM 5 MIN, 120 MIN e 245 MIN
         # Adicionando pontos marcados
         if len(data_effective_sterilization) > 0:

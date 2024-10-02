@@ -229,8 +229,8 @@ class dataobject_fita_digital():
           
         return data
 
-    def extract_data_sterilization(self, event_start = 'ESTERILIZACAO', envent_stop ='LAVAGEM' ):
-        data = self.extract_data_between_events(event_start,envent_stop)
+    def extract_data_sterilization(self, event_start = 'ESTERILIZACAO', event_stop ='LAVAGEM' ):
+        data = self.extract_data_between_events(event_start,event_stop)
         return data
     
     def data_threshold(self,data = [],threshold_name = 'PCI', threshold_value=-0.180, threshold_uncertainty=0.010):
