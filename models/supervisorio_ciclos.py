@@ -235,15 +235,17 @@ class SupervisorioCiclos(models.Model):
         
         for index in range(len(self.cycle_model.magnitude_data)):
             _logger.debug(f"Index:{index}")
-
-            vals.append([item[index] for item in data]  ) 
+            if self.cycle_model.magnitude_data[index].type == "float":
+                vals.append([float(item[index]) for item in data]  ) 
+            else:
+                vals.append([item[index] for item in data]  ) 
    
         fig, ax1 = plt.subplots(figsize=(16, 9))
 
         color = 'tab:red'
         ax1.set_xlabel('Hora')
         ax1.set_ylabel('Pressão (Bar)', color=color)
-        ax1.plot(vals[0], float(vals[1]), color=color,label="Pressão")
+        ax1.plot(vals[0], vals[1], color=color,label="Pressão")
         _logger.info(f"Aqui os valores de pressão {vals[1]}")
         ax1.tick_params(axis='y', labelcolor=color)
         ax1.tick_params(axis='x',labelrotation=90.0,labelsize=8)
