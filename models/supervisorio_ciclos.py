@@ -10,6 +10,7 @@ from plotly import tools
 from collections import Counter
 import plotly.graph_objects as go
 import plotly.offline as pyo
+import glob
 
 
 from .fita_digital.dataobject_fita_digital import dataobject_fita_digital
@@ -536,78 +537,81 @@ class SupervisorioCiclos(models.Model):
         equipment = self.env['engc.equipment'].search([('apelido','=like',equipment_alias )])
         _logger.debug(f"O equipamento de apelido {equipment_alias}  agora é: {equipment}")
         #TODO modificar para ver se só os diretórios que tiveram atualização estejam na lista
+        for root, dirs, files in os.walk(diretorio):
         
-        for nome_pasta in os.listdir(diretorio):
-            caminho_pasta = os.path.join(diretorio, nome_pasta)
+            caminho_pasta = os.path.join(diretorio, root)
             _logger.debug(f"Lendo diretorio: {caminho_pasta}")
            
           
-            if os.path.isdir(caminho_pasta):
+            
 
-                codigo_carga = nome_pasta
-                lista_de_arquivos = os.listdir(caminho_pasta)
-                _logger.debug(f"Lista de arquivo do diretorio: {lista_de_arquivos}")
+            
+            lista_de_arquivos = glob.glob(os.path.join(root, "*.txt"))
+            _logger.debug(f"Lista de arquivo do diretorio {root}: {lista_de_arquivos}")
 
-                # filtrando apenas os arquivos tipo txt
-                lista_de_arquivos_txt = [arquivo for arquivo in lista_de_arquivos if arquivo.endswith('txt')]
-                _logger.debug(f"Lista de arquivos encontrada: {lista_de_arquivos_txt}") 
-                for arquivo in lista_de_arquivos_txt:  
-                    path_full_file = caminho_pasta+'/'+arquivo
-                   
-                    if self._arquivo_modificado_recentemente(path_full_file):
-                        arquivo_partes = arquivo.split('_')
-                        data_hora_inicio_str = arquivo_partes[1] + ' ' + arquivo_partes[2].replace('.txt', '')
-                        codigo_ciclo = arquivo.replace('.txt','')
-                        _logger.debug(f"codigo_ciclo: {codigo_ciclo}")
-                        # Converter a data e hora para o formato datetime
-                        data_inicio = self.convert_date_str_file_to_datetime(data_hora_inicio_str)
-                        _logger.debug(f"data_inicio: {data_inicio}")
-                        # Verificar se o código de ciclo já existe no modelo
-                        ciclo_existente = self.env['steril_supervisorio.ciclos'].search([('codigo_ciclo', '=', codigo_ciclo)])
-                        if ciclo_existente:
-                            _logger.debug(f"Ciclo {ciclo_existente.name} já existente no banco de dados")
-                        else:
-                            _logger.debug(f'Nenhum ciclo no banco cadastrado')
-                        if len(ciclo_existente) < 1: #não existe ciclo
-                            _logger.debug(f"Lendo header do arquivo: {path_full_file}")
-                            header = self.get_header_fita(path_full_file,equipment)
-                            
-                            operador_id = self._ler_arquivo_operador(header)
-                            _logger.debug(f'Operador:{operador_id}')
-                           
-                           
-                            ciclo = self.env['steril_supervisorio.ciclos'].create({
-                                'name': codigo_carga,
-                                'codigo_ciclo': codigo_ciclo,
-                                'data_inicio': data_inicio,
-                                'operator': operador_id,
-                                'company_id': equipment.company_id.id,
-                                'equipment': equipment.id or None,
-                                'path_file_ciclo_txt' : path_full_file,
-                                'cycle_model': equipment.cycle_model.id
-                                }
-                            )
-                            ciclo.flush()
-                            _logger.debug(f"Ciclo {ciclo.name} criado!")
-
-                        else:
-                            ciclo_existente.write({'path_file_ciclo_txt' : path_full_file})
-                            ciclo=ciclo_existente
+           
+            _logger.debug(f"Lista de arquivos encontrada: {lista_de_arquivos}") 
+            for arquivo in lista_de_arquivos:  
+                path_full_file = arquivo
+                
+                if self._arquivo_modificado_recentemente(path_full_file):
+                    arquivo_partes = arquivo.split('/')
+                    arquivo_name = arquivo_partes[-1]
+                    arquivo_partes = arquivo_name.split('_')
+                    
+                    data_hora_inicio_str = arquivo_partes[1] + ' ' + arquivo_partes[2].replace('.txt', '')
+                    codigo_carga =arquivo_partes[0]
+                    codigo_ciclo = arquivo_name.replace('.txt','')
+                    _logger.debug(f"codigo_ciclo: {codigo_ciclo}")
+                    # Converter a data e hora para o formato datetime
+                    data_inicio = self.convert_date_str_file_to_datetime(data_hora_inicio_str)
+                    _logger.debug(f"data_inicio: {data_inicio}")
+                    # Verificar se o código de ciclo já existe no modelo
+                    ciclo_existente = self.env['steril_supervisorio.ciclos'].search([('codigo_ciclo', '=', codigo_ciclo)])
+                    if ciclo_existente:
+                        _logger.debug(f"Ciclo {ciclo_existente.name} já existente no banco de dados")
+                    else:
+                        _logger.debug(f'Nenhum ciclo no banco cadastrado')
+                    if len(ciclo_existente) < 1: #não existe ciclo
+                        _logger.debug(f"Lendo header do arquivo: {path_full_file}")
+                        header = self.get_header_fita(path_full_file,equipment)
                         
-                      
-                        #if(ciclo and ciclo.state not in ['finalizado']):
-                        if(ciclo and ciclo.state in ['iniciado','em_andamento', 'incompleto']):
-                           #_logger.debug("Adicionando estatisticass")
-                           _logger.debug(f"Dados cabeçalho do ciclo: {ciclo.cycle_model},{ciclo.equipment.name}")
-                           _logger.debug(f"Adicionando imagem do grafico do ciclo {ciclo.name}")
+                        operador_id = self._ler_arquivo_operador(header)
+                        _logger.debug(f'Operador:{operador_id}')
+                        
+                        
+                        ciclo = self.env['steril_supervisorio.ciclos'].create({
+                            'name': codigo_carga,
+                            'codigo_ciclo': codigo_ciclo,
+                            'data_inicio': data_inicio,
+                            'operator': operador_id,
+                            'company_id': equipment.company_id.id,
+                            'equipment': equipment.id or None,
+                            'path_file_ciclo_txt' : path_full_file,
+                            'cycle_model': equipment.cycle_model.id
+                            }
+                        )
+                        ciclo.flush()
+                        _logger.debug(f"Ciclo {ciclo.name} criado!")
 
-                           ciclo.set_chart_image()
-                           _logger.debug(f"Adicionando anexo em pdf  do ciclo {ciclo.name}")
-                           ciclo.adicionar_anexo_pdf()
-                           _logger.debug(f"Atualizando dados ao banco  do ciclo {ciclo.name}")
-                           ciclo.add_data_file_to_record()
-                           ciclo.flush()
-                           self.env.cr.commit()
+                    else:
+                        ciclo_existente.write({'path_file_ciclo_txt' : path_full_file})
+                        ciclo=ciclo_existente
+                    
+                    
+                    #if(ciclo and ciclo.state not in ['finalizado']):
+                    if(ciclo and ciclo.state in ['iniciado','em_andamento', 'incompleto']):
+                        #_logger.debug("Adicionando estatisticass")
+                        _logger.debug(f"Dados cabeçalho do ciclo: {ciclo.cycle_model},{ciclo.equipment.name}")
+                        _logger.debug(f"Adicionando imagem do grafico do ciclo {ciclo.name}")
+
+                        ciclo.set_chart_image()
+                        _logger.debug(f"Adicionando anexo em pdf  do ciclo {ciclo.name}")
+                        ciclo.adicionar_anexo_pdf()
+                        _logger.debug(f"Atualizando dados ao banco  do ciclo {ciclo.name}")
+                        ciclo.add_data_file_to_record()
+                        ciclo.flush()
+                        self.env.cr.commit()
 
         return True   
     def set_statistics_cycle(self):
