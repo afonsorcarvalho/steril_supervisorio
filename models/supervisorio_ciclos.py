@@ -951,7 +951,7 @@ class SupervisorioCiclos(models.Model):
         agora = fields.Datetime.now()
         diff = agora - data_inicio
 
-        if diff > timedelta(hours=8):
+        if diff > timedelta(hours=self.cycle_model.incomplete_time_cycle):
             return True
         else:
             return False
@@ -982,7 +982,7 @@ class SupervisorioCiclos(models.Model):
         value = {}
         #lendo arquivo com os dados do ciclo
         _logger.debug(f"Entrando na add_data_file_to_record")
-
+       
         # iniciando data object leitura da fita
         do = self._get_dataobject_cycle()
         if not do:
@@ -1353,9 +1353,9 @@ class SupervisorioCiclos(models.Model):
         #TODO ver se a data do diretório é maior que a data da ultima_atualizacao, atualizando somente máquinas que tiverem ciclos novos
         
         # self.ler_diretorio_ciclos("ETO04")
-        # self.ler_diretorio_ciclos("ETO03")
-        # self.ler_diretorio_ciclos("ETO02")
-        self.ler_diretorio_ciclos("ETO04")
+        self.ler_diretorio_ciclos("ETO01")
+        self.ler_diretorio_ciclos("ETO02")
+        # self.ler_diretorio_ciclos("ETO04")
 
     def action_insert_mass_eto(self):
         return {

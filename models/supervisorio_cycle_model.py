@@ -15,6 +15,7 @@ class CycleModel(models.Model):
     phase_data = fields.One2many(string='Fases',comodel_name='steril_supervisorio.cycle.model.phase.data',inverse_name='cycle_model',copy=True )
     magnitude_data = fields.One2many(string='Grandezas',comodel_name='steril_supervisorio.cycle.model.magnitude',inverse_name='cycle_model',copy=True )
     porcentagem_eto = fields.Float(string="Porcentagem ETO",copy=True)
+    incomplete_time_cycle = fields.Integer(help="Tempo onde é considerado incompleto o ciclo") 
 
     # isso é usado pra calcular onde começa e finaliza a esterilização
 
