@@ -245,11 +245,12 @@ class dataobject_fita_digital():
     def data_threshold(self,data = [],threshold_name = 'PCI', threshold_value=-0.180, threshold_uncertainty=0.010):
     
         default_value = -1
-        max_value = 20000
+        max_value = 2000
         # Encontrar o índice onde a pressão PCI atinge ou ultrapassa o limite
 
         if threshold_name == 'Massa ETO':
             default_value = 0
+            max_value = 1000
             
         
         indice_inicio = None
