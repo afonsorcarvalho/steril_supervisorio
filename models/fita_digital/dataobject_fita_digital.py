@@ -42,7 +42,16 @@ class dataobject_fita_digital():
     def set_model_columns_name_data(self,columns_names=['Hora','PCI','TCI','UR']):
         self.model_columns_name_data = columns_names
 
-    
+    def extract_max_eto_mass(self,num_col_eto_mass=4,name_col_eto_mass='Massa ETO'):
+        result = []
+        data = self.extract_data_sterilization()
+        print("EXTRACT ETO MASS")
+        if len(data[0]) >= num_col_eto_mass+1:
+            for index, value in enumerate(data):
+                result.append(value[name_col_eto_mass])
+        result = [float(value) for value in result if 0 <= float(value) <= 1000]
+
+        return max(result)
 
 
     def extract_header_cycle_sterilization(self):
@@ -55,7 +64,7 @@ class dataobject_fita_digital():
             print(f"Lendo arquivo: {self.filename}")
             with open(self.filename, 'r') as file:
                 lines = file.readlines()
-                lines = lines[:25]
+                lines = lines[:header_lines]
         except FileNotFoundError:
             print(f"Erro: O arquivo '{self.filename}' não foi encontrado.")
            

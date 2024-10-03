@@ -304,7 +304,7 @@ class SupervisorioCiclos(models.Model):
             threshold_name=effective_sterilization_threshold_column_name,
             threshold_uncertainty=effective_sterilization_threshold_uncertainty
             )
-        #TODO FAZER PARA LER O VALOR DE UMIDADE COM 5 MIN, 120 MIN e 245 MIN
+        
         # Adicionando pontos marcados
         if len(data_effective_sterilization) > 0:
             indice_start_sterilization = self._get_index_hora(data,data_effective_sterilization[0]['Hora'])
@@ -344,74 +344,74 @@ class SupervisorioCiclos(models.Model):
        #ax1.legend(,FASES,loc='best',fontsize=12)
         return fig
     
-    def mount_fig_chart_plotly(self):
-        data_raw = self._get_cycle_data()
-        data = []
-        for d in data_raw:
-            data.append(( d['Hora'], float(d['PCI']), float(d['TCI']), float(d['UR'])) )
+    # def mount_fig_chart_plotly(self):
+    #     data_raw = self._get_cycle_data()
+    #     data = []
+    #     for d in data_raw:
+    #         data.append(( d['Hora'], float(d['PCI']), float(d['TCI']), float(d['UR'])) )
 
         
-        # Separar os dados em listas
-        tempos = [item[0] for item in data]
-        valores1 = [item[1] for item in data]
-        valores2 = [item[2] for item in data]
-        valores3 = [item[3] for item in data]
+    #     # Separar os dados em listas
+    #     tempos = [item[0] for item in data]
+    #     valores1 = [item[1] for item in data]
+    #     valores2 = [item[2] for item in data]
+    #     valores3 = [item[3] for item in data]
 
-        # Criar os traces
-        trace1 = go.Scatter(x=tempos, y=valores1, mode='lines', name='Pressão (bar)', yaxis="y1")
-        trace2 = go.Scatter(x=tempos, y=valores2, mode='lines', name='Temperatura (ºC)', yaxis="y2")
-        trace3 = go.Scatter(x=tempos, y=valores3, mode='lines', name='Umidade (UR%)', yaxis="y2")
+    #     # Criar os traces
+    #     trace1 = go.Scatter(x=tempos, y=valores1, mode='lines', name='Pressão (bar)', yaxis="y1")
+    #     trace2 = go.Scatter(x=tempos, y=valores2, mode='lines', name='Temperatura (ºC)', yaxis="y2")
+    #     trace3 = go.Scatter(x=tempos, y=valores3, mode='lines', name='Umidade (UR%)', yaxis="y2")
 
-        # Criar o layout
-        layout = go.Layout(
-            title='Gráfico do Ciclo ' + self.codigo_ciclo,
-            xaxis=dict(title='Hora'),
-            yaxis=dict(title='Pressão(Bar)', side='left', domain=[0, 1] ),
-            yaxis2=dict(title='ºC / UR% ', side='right', overlaying='y',domain=[0, 1]),
-            autosize=True,
-            legend=dict(title='Dados'),
+    #     # Criar o layout
+    #     layout = go.Layout(
+    #         title='Gráfico do Ciclo ' + self.codigo_ciclo,
+    #         xaxis=dict(title='Hora'),
+    #         yaxis=dict(title='Pressão(Bar)', side='left', domain=[0, 1] ),
+    #         yaxis2=dict(title='ºC / UR% ', side='right', overlaying='y',domain=[0, 1]),
+    #         autosize=True,
+    #         legend=dict(title='Dados'),
             
-            width=1024,  # Largura da figura em pixels
-            height=800  # Altura da figura em pixels
-        )
-        # Criar a figura
-        umidade_5 = ['21:58:47',55]
-        umidade_120 = ['23:53:33',64]
-        umidade_235 = ['01:20:52',64]
-        pontos_marcar = [umidade_5,umidade_120,umidade_235]
+    #         width=1024,  # Largura da figura em pixels
+    #         height=800  # Altura da figura em pixels
+    #     )
+    #     # Criar a figura
+    #     umidade_5 = ['21:58:47',55]
+    #     umidade_120 = ['23:53:33',64]
+    #     umidade_235 = ['01:20:52',64]
+    #     pontos_marcar = [umidade_5,umidade_120,umidade_235]
 
-        # Limites da zona a ser marcada
-        zone_x = ['21:32:37', '01:32:45']  # Intervalo de x para a zona
-        zone_y_lower = [0, 0]  # Limite inferior da zona para cada ponto x
-        zone_y_upper = [100, 100]  # Limite superior da zona para cada ponto x
+    #     # Limites da zona a ser marcada
+    #     zone_x = ['21:32:37', '01:32:45']  # Intervalo de x para a zona
+    #     zone_y_lower = [0, 0]  # Limite inferior da zona para cada ponto x
+    #     zone_y_upper = [100, 100]  # Limite superior da zona para cada ponto x
             
-        fig = go.Figure( layout=layout)
-        fig.add_trace(trace1)
-        fig.add_trace(trace2)
-        fig.add_trace(trace3)
-        for p in pontos_marcar:
+    #     fig = go.Figure( layout=layout)
+    #     fig.add_trace(trace1)
+    #     fig.add_trace(trace2)
+    #     fig.add_trace(trace3)
+    #     for p in pontos_marcar:
 
-            fig.add_trace(go.Scatter(x=[p[0]],
-                                    y=[p[1]], mode='markers', 
+    #         fig.add_trace(go.Scatter(x=[p[0]],
+    #                                 y=[p[1]], mode='markers', 
                                     
-                                    yaxis="y2",
+    #                                 yaxis="y2",
                                     
-                                    marker=dict(color='black', size=10,symbol='circle-open'),
-                                    textposition='top center', showlegend=False,
-                                    ))
-            fig.add_trace(go.Scatter(x=[p[0]], y=[p[1]+2],yaxis="y2",textposition='top center', mode='text', text=[f"({p[0]},{p[1]}%)"], showlegend=False))
-        # Adicionando a zona de esterilização
-        fig.add_trace(go.Scatter(x=zone_x + zone_x[::-1],  # Criando uma linha fechada conectando os pontos
-                        y=zone_y_lower + zone_y_upper[::-1],  # Adicionando os limites inferior e superior
-                        fill='toself',  # Preenchendo a área entre as linhas
-                        fillcolor='rgba(255, 255, 0, 0.2)',  # Cor do preenchimento (verde com transparência)
-                        line=dict(color='rgba(0, 0, 0, 0)'),  # Escondendo a linha de contorno
-                        name='Esterilização',
-                        yaxis="y2",text="ESTERILIZAÇÃO"
+    #                                 marker=dict(color='black', size=10,symbol='circle-open'),
+    #                                 textposition='top center', showlegend=False,
+    #                                 ))
+    #         fig.add_trace(go.Scatter(x=[p[0]], y=[p[1]+2],yaxis="y2",textposition='top center', mode='text', text=[f"({p[0]},{p[1]}%)"], showlegend=False))
+    #     # Adicionando a zona de esterilização
+    #     fig.add_trace(go.Scatter(x=zone_x + zone_x[::-1],  # Criando uma linha fechada conectando os pontos
+    #                     y=zone_y_lower + zone_y_upper[::-1],  # Adicionando os limites inferior e superior
+    #                     fill='toself',  # Preenchendo a área entre as linhas
+    #                     fillcolor='rgba(255, 255, 0, 0.2)',  # Cor do preenchimento (verde com transparência)
+    #                     line=dict(color='rgba(0, 0, 0, 0)'),  # Escondendo a linha de contorno
+    #                     name='Esterilização',
+    #                     yaxis="y2",text="ESTERILIZAÇÃO"
                         
-                        ))
+    #                     ))
         
-        return fig
+    #     return fig
     
     def _get_dataobject_cycle(self,path_file_ciclo_txt = None, equipment=0):
                 
@@ -1001,11 +1001,22 @@ class SupervisorioCiclos(models.Model):
             _logger.warning(f"Não foi possível encontrar no ciclo {self.name} o data_object retornou False")
             return 0
         data_cycle = do.extract_cycle_data()
+        data_eto_mass_cycle = 0 
+        if self.cycle_model.effective_sterilization_threshold_column_name == 'Massa ETO':
+            data_eto_mass_cycle = do.extract_max_eto_mass(num_col_eto_mass=4,name_col_eto_mass='Massa ETO')
+            self.write({
+                'massa_eto': data_eto_mass_cycle*(self.cycle_model.porcentagem_eto/100),
+                'massa_eto_gas': data_eto_mass_cycle,
+            })
+            self._compute_concentracao_eto()
+       
+            
         if len(data_cycle) < 1:
             _logger.warning(f"Nenhum dado foi encontrado no ciclo {self.name}")
             return 0
         # pegando as configuraç~eos de fase
-        
+        #path_file_ciclo_txt
+        _logger.info(data_eto_mass_cycle)
         phases = self.cycle_model.phase_data
         phases_name = phases.mapped('name') #nome da fase que sera mostrada
         phases_regex = phases.mapped('regex_tape') #regex de procura na fita
