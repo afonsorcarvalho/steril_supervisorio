@@ -147,6 +147,19 @@
                                     </tree>
                                 </field>
                                  <field name="grafico_ciclo" widget="image" options='{"zoom": true}' attrs = "{'readonly': [('state','not in',('draft'))]}"/> 
+                                <group string="Alarmes"></group>
+
+                                    <field name="alarm_ids" nolabel="1"  >
+                                       <tree>
+                                           <field name="date_start" />
+                                           <field name="date_stop"/>
+                                           <field name="alarm_code"/>
+                                           <field name="alarm_name"/>
+                                           
+                                       </tree>
+   
+                                   </field>
+                                
                                 <!-- <group> -->
 
                                     <!-- <div class="col-12 text-center">

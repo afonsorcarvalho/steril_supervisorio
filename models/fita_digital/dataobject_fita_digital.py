@@ -4,6 +4,7 @@
 import re
 import statistics
 from datetime import datetime, timedelta
+import csv
 
 class dataobject_fita_digital():
 
@@ -27,6 +28,7 @@ class dataobject_fita_digital():
     model_columns_name_data = []
     header_lines = 25
     header_items = []
+    filename_alarms = ""
     
     def set_filename(self,filename):
         self.filename = filename
@@ -233,23 +235,37 @@ class dataobject_fita_digital():
         data = self.extract_data_between_events(event_start,event_stop)
         return data
     
+    def sanitize_data(self, data, max_value, default_value):
+      
+        result = data
+        if data > max_value:
+            result = default_value  # Substitui pelo valor padrão
+        return result
+
     def data_threshold(self,data = [],threshold_name = 'PCI', threshold_value=-0.180, threshold_uncertainty=0.010):
     
+        default_value = -1
+        max_value = 20000
         # Encontrar o índice onde a pressão PCI atinge ou ultrapassa o limite
+
+        if threshold_name == 'Massa ETO':
+            default_value = 0
+            
+        
         indice_inicio = None
         for i, dado in enumerate(data):
 
-            print ("VALOR DO THERSHOLD - INCERTEZA")
-            print (threshold_value - threshold_uncertainty)
-            print ("VALOR DO DADO ESTERILIZAÇÃO")
-            print (dado[threshold_name])
+            # print ("VALOR DO THERSHOLD - INCERTEZA")
+            # print (threshold_value - threshold_uncertainty)
+            # print ("VALOR DO DADO ESTERILIZAÇÃO")
+            # print (dado[threshold_name])
             try:
-                if float(dado[threshold_name]) >=  (threshold_value - threshold_uncertainty) :
+                if self.sanitize_data(float(dado[threshold_name]),max_value=max_value,default_value=default_value) >=  (threshold_value - threshold_uncertainty) :
                     indice_inicio = i
                     print(indice_inicio)
                     break
-            except:
-                print("NÃO FOI POSSÍVEL VERIFICAR threshold NESSA LINHA")
+            except Exception as e:
+                print(f"NÃO FOI POSSÍVEL VERIFICAR threshold NESSA LINHA. {e}")
 
         # Se não encontrar nenhum ponto acima do limite, retornar uma lista vazia
         if indice_inicio is None:
@@ -316,7 +332,52 @@ class dataobject_fita_digital():
         
         return f"{horas:02d}:{minutos:02d}:{segundos:02d}"
 
+# Função para filtrar alarmes entre duas datas
+def filter_alarms_by_date(csv_file, start_date, end_date):
+    filtered_alarms = []
+    
+    # Converter strings de data para objetos datetime
+    start_date = datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
+    end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
+    
+    # Ler o arquivo CSV no modo binário e remover caracteres nulos
+    with open(csv_file, mode='rb') as file:
+        content = file.read().replace(b'\x00', b'')  # Remover caracteres NUL
 
+    # Reabrir o conteúdo como texto após remover os caracteres nulos
+    content = content.decode('ISO-8859-1')  # Decodificar usando a codificação correta
+    
+    # Processar o conteúdo como CSV
+    reader = csv.reader(content.splitlines(), delimiter='\t')
+    
+
+    # Iterar sobre cada linha do conteúdo filtrado
+    for row in reader:
+        
+        try:
+            # Tentar converter a "Trigger Time" para datetime
+            trigger_time = datetime.strptime(row[1]+' '+row[2], '%Y-%m-%d %H:%M:%S')
+            
+            # Verificar se a data está dentro do intervalo
+            if start_date <= trigger_time <= end_date:
+                filtered_alarms.append(row)
+        except (ValueError, IndexError):
+           
+            # Se houver erro ao processar a data ou a linha não estiver formatada corretamente, ignorar
+            continue
+    
+    return filtered_alarms
+
+# # Exemplo de uso
+# csv_file = '/home/afonso/docker/odoo_engenapp/data/odoo/filestore/odoo-steriliza/Ciclos/ETO01/HMI/HMI-000/Alarm/CSV/Alarm.csv'  # Substitua pelo nome do seu arquivo CSV
+# start_date = '2024-10-02 04:00:00'
+# end_date = '2024-10-02 16:51:00'
+
+# filtered_alarms = filter_alarms_by_date(csv_file, start_date, end_date)
+
+# # Exibir os alarmes filtrados
+# for alarm in filtered_alarms:
+#     print(alarm)
         
 
     

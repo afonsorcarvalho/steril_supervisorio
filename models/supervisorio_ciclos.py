@@ -11,6 +11,7 @@ from collections import Counter
 import plotly.graph_objects as go
 import plotly.offline as pyo
 import glob
+import csv
 
 
 from .fita_digital.dataobject_fita_digital import dataobject_fita_digital
@@ -124,6 +125,7 @@ class SupervisorioCiclos(models.Model):
     concentracao_eto = fields.Float("Concentração ETO", compute="_compute_concentracao_eto",
      tracking=True
     )
+
     @api.onchange('massa_eto')
     def onchange_field(self):
         self._compute_concentracao_eto()
@@ -178,6 +180,11 @@ class SupervisorioCiclos(models.Model):
     equipment = fields.Many2one(
         string='Equipamento',
         comodel_name='engc.equipment'
+    )
+    alarm_ids = fields.One2many(
+        comodel_name='engc.equipment.alarms',inverse_name='cycle_id',
+        
+        
     )
 
     fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
@@ -417,27 +424,32 @@ class SupervisorioCiclos(models.Model):
                 do_cycle.set_filename(self.path_file_ciclo_txt)
             else:
                 raise ValidationError("Nenhum path_file_ciclo_txt encontrado")
+        
         # procurando modelo do ciclo
         _logger.debug("PROCURANDO MODELO DO CICLO")
         if self.cycle_model:
             _logger.debug(f"Já cadastrado no ciclo {self.name} o cycle model {self.cycle_model.name}")
             _logger.debug(f"Dados do cabeçalho {self.cycle_model.header_data}")
             _logger.debug(f"Colunas de dados: {self.cycle_model.magnitude_data}")
-            columns_data = self.cycle_model.magnitude_data
-            header_data = self.cycle_model.header_data
+            cycle_model = self.cycle_model
+            
             
         else:
             _logger.debug(f"Não encontrado cycle model no ciclo {self.name}, procurando o modelo de ciclo padrão do equipamento")
             if equipment:
                 _logger.debug(f"Procurando cycle model no equipamento {equipment.name}")
-                columns_data = equipment.cycle_model.magnitude_data
-                header_data = equipment.cycle_model.header_data
+                cycle_model = equipment.cycle_model
+                
                 if not equipment.cycle_model:
                     raise ValidationError(f"O Equipamento {equipment.name} não tem um modelo de um ciclo padrão")
                 _logger.debug(f"Modelo encontrado {equipment.cycle_model.name}")
             else:
                 _logger.debug(f"No ciclo {self.name} não foi encontrado equipamento para pegar o modelo de um ciclo")
                 return False
+            
+        columns_data = cycle_model.magnitude_data
+        header_data = cycle_model.header_data
+        header_lines =  cycle_model.header_lines   
         #_logger.debug(columns_data)
         # Configura a quantidade de colunas da fita e as grandezas relacionadas
         columns_names =[]
@@ -449,11 +461,11 @@ class SupervisorioCiclos(models.Model):
         _logger.debug(f"COLUMN NAMES: {columns_names}")
         _logger.debug(f"HEADER NAMES: {header_names}")
         do_cycle.set_model_columns_name_data(columns_names=columns_names)
-        #do_cycle.set_model_columns_data(qtd_columns=len(columns_data),columns_names=columns_names) 
+        
         # Configura a todos os dados que estao no cabecalho da fita
         do_cycle.set_header_items(items=header_names) #items do cabecalho
         #quantidade de linhas que tem o cabecalho
-        do_cycle.set_header_lines(25) 
+        do_cycle.set_header_lines(header_lines) 
         return do_cycle
 
     def _get_cycle_data(self):
@@ -510,7 +522,7 @@ class SupervisorioCiclos(models.Model):
         # _logger.info(f"Data original de modificação do arquivo {path_arquivo}: {data_modificacao}")
         # data_modificacao = fuso_horario.localize(data_ultima_atualizacao).astimezone(pytz.utc).replace(tzinfo=None)                 
         _logger.debug(f"Data modificação do arquivo {path_arquivo}: {data_modificacao}")
-        if data_modificacao >= (data_ultima_atualizacao - timedelta(minutes=10)):
+        if data_modificacao >= (data_ultima_atualizacao - timedelta(minutes=60)):
             _logger.debug(f"A data {data_modificacao} é maior ou igual  {data_ultima_atualizacao}")
             return True
         else:

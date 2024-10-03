@@ -1,3 +1,4 @@
+#CODIGO NÃO UITLIZADO APENAS PESQUISA EXEMPLO UTILIZE O dataobject_fita_digital.py
 # ler dados da fita de impressão para AFR 1.3 mirax
 
 def extract_cycle_sterilization_data(filename):

@@ -16,6 +16,34 @@
                     </group>
 
                 </page>
+                <page string="Alarmes">
+                     <field name="alarm_ids" nolabel="1">
+                        <tree>
+                            <field name="date_start"/>
+                            <field name="date_stop"/>
+                            <field name="alarm_code"/>
+                            <field name="alarm_name"/>
+                            <field name="cycle_id"/>
+                            
+                        </tree>
+                        <form>
+                            <group>
+                                <group>
+                                    <field name="date_start"/>
+                                    <field name="date_stop"/>
+                                </group>
+                                <group>
+
+                                    <field name="alarm_code"/>
+                                    <field name="alarm_name"/>
+                                    <field name="cycle_id"/>
+                                </group> 
+                        </group>
+                            
+                        </form>
+                    </field>
+
+                </page>
                 
             </xpath>
         </field>
