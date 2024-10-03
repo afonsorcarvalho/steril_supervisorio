@@ -43,7 +43,7 @@ class dataobject_fita_digital():
         self.model_columns_name_data = columns_names
 
     def extract_max_eto_mass(self,num_col_eto_mass=4,name_col_eto_mass='Massa ETO'):
-        result = []
+        result = [0]
         data = self.extract_data_sterilization()
         print("EXTRACT ETO MASS")
         try:
