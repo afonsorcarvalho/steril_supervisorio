@@ -46,10 +46,13 @@ class dataobject_fita_digital():
         result = []
         data = self.extract_data_sterilization()
         print("EXTRACT ETO MASS")
-        if len(data[0]) >= num_col_eto_mass+1:
-            for index, value in enumerate(data):
-                result.append(value[name_col_eto_mass])
-        result = [float(value) for value in result if 0 <= float(value) <= 1000]
+        try:
+            if len(data[0]) >= num_col_eto_mass+1:
+                for index, value in enumerate(data):
+                    result.append(value[name_col_eto_mass])
+            result = [float(value) for value in result if 0 <= float(value) <= 1000]
+        except Exception as e:
+            print(f"Method dataobject_fita_digital:extract_max_eto_mass() error: {e}")
 
         return max(result)
 
