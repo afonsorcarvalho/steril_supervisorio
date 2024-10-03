@@ -1054,8 +1054,15 @@ class SupervisorioCiclos(models.Model):
         else:
             if self.identifica_ciclo_incompleto(self.data_inicio):
                 time_cycle_duration = do.compute_elapsed_time(start_time=start_cycle_time,end_time = end_cycle_time)
+                #Procurando se finalizou na ultima fase mesmo sem ciclo abortado
+                fase_end = self.env['steril_supervisorio.ciclos.fases.eto'].search(['&',('name','=', phases_name[-2]),('ciclo','=',self.id)])
+                if len(fase_end) > 0:
+                    state = 'finalizado'
+                else:
+                    state = 'incompleto'
+                    
                 self.write({
-                    'state':'incompleto',
+                    'state':state,
                     'data_fim': self.data_inicio + time_cycle_duration
                 })
             else:
