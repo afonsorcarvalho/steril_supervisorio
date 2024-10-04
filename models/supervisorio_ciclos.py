@@ -183,8 +183,7 @@ class SupervisorioCiclos(models.Model):
     )
     alarm_ids = fields.One2many(
         comodel_name='engc.equipment.alarms',inverse_name='cycle_id',
-        
-        
+
     )
 
     fases = fields.One2many(string='Fases',comodel_name='steril_supervisorio.ciclos.fases.eto',inverse_name='ciclo' )
@@ -203,16 +202,7 @@ class SupervisorioCiclos(models.Model):
                 'ir.attachment'].search_count(
                 [('res_id', '=', record.id), ('res_model', '=', 'steril_supervisorio.ciclos')])
 
-    # plotly_chart = fields.Text(
-    #      string='Plotly Chart',
-    #      compute='_compute_plotly_chart',
-        
-    #  )
-    
-    # def _compute_plotly_chart(self):
-    #     for rec in self:
-    #          fig = rec.mount_fig_chart_plotly()
-    #          rec.plotly_chart = pyo.plot(fig, include_plotlyjs=False, output_type='div')
+ 
  
     _sql_constraints = [('codigo_ciclo_equipment_unique', 'unique(codigo_ciclo, equipment)',
                          'Codigo de ciclo duplicado '

@@ -12,13 +12,18 @@
 
                             <field name="cycle_model"/>
                             <field name="chamber_size"/>
+                            <field name="alarm_path_file"/>
                         </group>
                     </group>
 
                 </page>
                 <page string="Alarmes">
-                     <field name="alarm_ids" nolabel="1">
-                        <tree>
+                            <header>
+                                <button name="load_alarms" type="object" string="Atualizar Alarmes" class="btn-primary"/>
+                            </header>
+                    <field name="alarm_ids" nolabel="1" >
+                        <tree default_order="date_start desc">
+                            
                             <field name="date_start"/>
                             <field name="date_stop"/>
                             <field name="alarm_code"/>
