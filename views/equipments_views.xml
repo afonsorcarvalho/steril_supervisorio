@@ -20,6 +20,8 @@
                 <page string="Alarmes">
                             <header>
                                 <button name="load_alarms" type="object" string="Atualizar Alarmes" class="btn-primary"/>
+                         
+                                <button name="set_cycle_alarms" type="object" string="Atualizar Ciclos" class="btn-primary"/>
                             </header>
                     <field name="alarm_ids" nolabel="1" >
                         <tree default_order="date_start desc">
