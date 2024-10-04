@@ -57,9 +57,9 @@ class EngcEquipment(models.Model):
          
         for line in alarms[1:]:
             offset_hours = 3 #transformando timezone para utc
-            date_start = datetime.strptime(line[1]+" "+line[2], '%Y-%m-%d %H:%M:%S')  if line[1] else None
+            date_start = datetime.strptime(line[1]+" "+line[2], '%Y-%m-%d %H:%M:%S') + timedelta(hours=offset_hours) if line[1] else None
             print(date_start)
-            date_stop = datetime.strptime(line[5]+" "+line[6], '%Y-%m-%d %H:%M:%S')  if line[5] else None
+            date_stop = datetime.strptime(line[5]+" "+line[6], '%Y-%m-%d %H:%M:%S')  + timedelta(hours=offset_hours) if line[5] else None
             values.append((0,0,{
                  'date_start' : date_start ,
                  'date_stop' : date_stop,
