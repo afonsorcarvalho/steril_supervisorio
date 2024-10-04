@@ -78,7 +78,7 @@ class EngcEquipment(models.Model):
         equipment = self.env['engc.equipment'].search([('apelido','=like',alias )])
         alarms = self.env['engc.equipment.alarms'].search([('cycle_id','=',False),('equipment_id','=',equipment.id)])
         for alarm in alarms:
-            data_inicio_search = alarm.date_start + timedelta(offset_hours)
+            data_inicio_search = alarm.date_start + timedelta(hours=offset_hours)
             print(alarm.date_start)
             cycles =None
             cycles = self.env['steril_supervisorio.ciclos'].search(['&','&',('data_inicio','<=',data_inicio_search),
