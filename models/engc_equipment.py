@@ -81,9 +81,12 @@ class EngcEquipment(models.Model):
             data_inicio_search = alarm.date_start + timedelta(offset_hours)
             print(alarm.date_start)
             cycles =None
-            cycles = self.env['steril_supervisorio.ciclos'].search(['&','&',('data_inicio','<=',data_inicio_search),('data_fim','>=',data_inicio_search),('equipment','=',equipment.id)])
+            cycles = self.env['steril_supervisorio.ciclos'].search(['&','&',('data_inicio','<=',data_inicio_search),
+                                                                    ('data_fim','>=',data_inicio_search),
+                                                                    ('equipment','=',equipment.id)],limit=1)
             if len(cycles) > 0:
-                _logger.info(cycles)
+
+               alarm.cycle_id = cycles.id
 
     # Função para remover caracteres nulos e filtrar alarmes entre duas datas
     def filter_alarms_by_date(self,csv_file, start_date, end_date):
