@@ -43,12 +43,12 @@ class EngcEquipment(models.Model):
         values =[]
         alarms = []
         primeiro = True
-
+        offset_hours = 3 #transformando timezone para utc
         for row in reader:
-            date_start_alarm = datetime.strptime(row[1]+" "+row[2], '%Y-%m-%d %H:%M:%S') + timedelta(hours=offset_hours)
             if primeiro:
                 primeiro = False
                 continue
+            date_start_alarm = datetime.strptime(row[1]+" "+row[2], '%Y-%m-%d %H:%M:%S') + timedelta(hours=offset_hours)
             if self.alarm_ids.search([('date_start','=',date_start_alarm),('equipment_id','=',equipment.id)]):
                 print(f"já tem: {row} ")
                 continue
@@ -57,7 +57,7 @@ class EngcEquipment(models.Model):
         
          
         for line in alarms[1:]:
-            offset_hours = 3 #transformando timezone para utc
+           
             date_start = datetime.strptime(line[1]+" "+line[2], '%Y-%m-%d %H:%M:%S') + timedelta(hours=offset_hours) if line[1] else None
             print(date_start)
             date_stop = datetime.strptime(line[5]+" "+line[6], '%Y-%m-%d %H:%M:%S')  + timedelta(hours=offset_hours) if line[5] else None
