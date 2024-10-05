@@ -45,10 +45,11 @@ class EngcEquipment(models.Model):
         primeiro = True
 
         for row in reader:
+            date_start_alarm = datetime.strptime(row[1]+" "+row[2], '%Y-%m-%d %H:%M:%S') + timedelta(hours=offset_hours)
             if primeiro:
                 primeiro = False
                 continue
-            if self.alarm_ids.search([('date_start','=',row[1]+" "+row[2]),('equipment_id','=',equipment.id)]):
+            if self.alarm_ids.search([('date_start','=',date_start_alarm),('equipment_id','=',equipment.id)]):
                 print(f"já tem: {row} ")
                 continue
             else:
