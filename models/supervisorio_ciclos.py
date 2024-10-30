@@ -591,7 +591,8 @@ class SupervisorioCiclos(models.Model):
                     if len(ciclo_existente) < 1: #não existe ciclo
                         _logger.debug(f"Lendo header do arquivo: {path_full_file}")
                         header = self.get_header_fita(path_full_file,equipment)
-                        
+                        if not header:
+                            continue
                         operador_id = self._ler_arquivo_operador(header)
                         _logger.debug(f'Operador:{operador_id}')
                         
@@ -641,6 +642,7 @@ class SupervisorioCiclos(models.Model):
         data = do.extract_header_cycle_sterilization()
         
         _logger.debug(data)
+        
         return data
 
 
