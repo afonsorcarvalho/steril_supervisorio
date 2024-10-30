@@ -707,7 +707,7 @@ class SupervisorioCiclos(models.Model):
  
     def _calcular_tempo_decorrido(self,lista):
         do = self._get_cycle_data()
-        if not lista:
+        if not lista or not do:
             return None
         diferenca_tempo = do.compute_elapsed_time(lista[0][0],lista[-1][0])
         return diferenca_tempo
