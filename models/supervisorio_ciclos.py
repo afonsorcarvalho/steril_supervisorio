@@ -546,10 +546,11 @@ class SupervisorioCiclos(models.Model):
         dbname = self.env.cr.dbname
         
         #lendo do diretorio que é atualizado pela IHMs dos equipamentos
+        dir_name_ciclos_base = self.env['ir.config_parameter'].get_param('steril_supervisorio_dir_name_ciclos_base')
         dir_name_ciclos = self.env['ir.config_parameter'].get_param('steril_supervisorio_dir_name_ciclos')
         if not dir_name_ciclos:
             raise ValidationError("Nenhum steril_supervisorio_dir_name_ciclos encontrado nos paramentros da empresa.")
-        diretorio = f"/var/lib/odoo/filestore/{dbname}/{dir_name_ciclos}/{equipment_alias}/" 
+        diretorio = f"/var/lib/odoo/filestore/{dbname}/{dir_name_ciclos_base}/{equipment_alias}/{dir_name_ciclos}" 
         equipment = self.env['engc.equipment'].search([('apelido','=like',equipment_alias )])
         _logger.debug(f"O equipamento de apelido {equipment_alias}  agora é: {equipment}")
         #TODO modificar para ver se só os diretórios que tiveram atualização estejam na lista
@@ -963,11 +964,13 @@ class SupervisorioCiclos(models.Model):
     def _ler_arquivo_operador(self,header):
         
         _logger.debug(f"HEADER: {header}")
-        operador = header['Operador'] 
-        apelido_operador = self.env['steril_supervisorio.ciclos.apelidos.operador'].search([('name','=',operador)])
-        if len(apelido_operador):
-            operador = apelido_operador[0].operador
-            return operador.id
+        if 'Operador' in header:
+            operador = header['Operador'] 
+            apelido_operador = self.env['steril_supervisorio.ciclos.apelidos.operador'].search([('name','=',operador)])
+            if len(apelido_operador):
+                operador = apelido_operador[0].operador
+                return operador.id
+        return None
                         
     def atualiza_parametro_ultima_atualizacao(self):
         date = datetime.now(fuso_horario)
@@ -1375,9 +1378,9 @@ class SupervisorioCiclos(models.Model):
         #TODO ver se a data do diretório é maior que a data da ultima_atualizacao, atualizando somente máquinas que tiverem ciclos novos
         
         # self.ler_diretorio_ciclos("ETO04")
-        self.ler_diretorio_ciclos("ETO01")
-        self.ler_diretorio_ciclos("ETO02")
-        # self.ler_diretorio_ciclos("ETO04")
+        #self.ler_diretorio_ciclos("ETO01")
+        #self.ler_diretorio_ciclos("ETO02")
+        self.ler_diretorio_ciclos("ESTUFA")
 
     def action_insert_mass_eto(self):
         return {
